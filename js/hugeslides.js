@@ -1,3 +1,12 @@
+/*!
+ * HugeSlides - with HugeSlides, quickly and easily view big pics and more.
+ * (c) 2013 Pavel Fomichev
+ * MIT Licensed.
+ *
+ * http://github.com/iPawl/HugeSlides
+ */
+
+
 function HugeSlides(link, options) {
     "use strict";
 
