@@ -7,6 +7,7 @@
     <link href='css/hugeslides.css' rel='stylesheet'/>
 </head>
 <body>
+<a href="#" class="myHugeSlides"><h2>Click me</h2></a>
 <!--big-pictures preview-->
 <script type="text/javascript">
     var comicsPreviewLinks = ["big-pictures/10.jpg", "big-pictures/11.jpg", "big-pictures/12.jpg", "big-pictures/13.jpg"];
@@ -16,18 +17,18 @@
 <script src="js/jquery-1.10.2.min.js"></script>
 <script src='js/hugeslides.js'></script>
 <script>
-    var myHugeSlides = HugeSlides({
-        comicsPreviewLinks: comicsPreviewLinks,
+    //var myHugeSlides = HugeSlides({
+       // comicsPreviewLinks: comicsPreviewLinks,
         // startSlide: 4,
         // auto: 3000,
-        continuous: false
+        // continuous: false
         // disableScroll: true,
         // stopPropagation: true,
         // callback: function(index, element) {console.log( 'cur ', index);},
         // transitionEnd: function(index, element) {}
-    });
+    // });
 
-    // var myHugeSlides = $('#mySwipe').Swipe().data('Swipe');
+    var myHugeSlidesAPI = $('.myHugeSlides').HugeSlides({comicsPreviewLinks: comicsPreviewLinks}).data('HugeSlides');
 </script>
 </body>
 </html>

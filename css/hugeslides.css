@@ -83,10 +83,11 @@ html, body {
     right: 0;
     bottom: 0;
     z-index: 3;
+    display: none;
 }
 
 .bodyComics {
-    display: block;
+    display: none;
     position: fixed;
     top: 0;
     left: 0;

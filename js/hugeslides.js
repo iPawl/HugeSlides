@@ -1,8 +1,8 @@
-function HugeSlides(options) {
+function HugeSlides(link, options) {
     "use strict";
 
-    if (!options.comicsPreviewLinks) return;
     options = options || {};
+    if (!options.comicsPreviewLinks) return;
     options.continuous = options.continuous !== undefined ? options.continuous : true;
 
     // utilities
@@ -115,7 +115,6 @@ function HugeSlides(options) {
     //добавляем слайды в основной контейнер
     element.appendChild(content);
 
-    // console.log(allImagesComics);
 
     function doubleTap(e) {
         var delay = 300;
@@ -164,11 +163,9 @@ function HugeSlides(options) {
             min2 = -elHeight / 2,
             max2 = $(window).height() / 2;
 
-
         clearInterval(scroll);
         clearInterval(scroll2);
-        //console.log(elWidth, elHeight);
-        //testEl.ontouchmove = testEl.onmousemove = moveDrag;
+
         if (browser.touch) {
             testEl.addEventListener('touchmove', moveDrag, false);
             testEl.addEventListener('touchend', endDrag, false);
@@ -176,8 +173,6 @@ function HugeSlides(options) {
             testEl.onmousemove = moveDrag;
             document.onmouseup = endDrag;
         }
-
-        // testEl.ontouchend = document.onmouseup = endDrag;
 
         function endDrag(e) {
             var end = getCoors(e).left,
@@ -193,11 +188,10 @@ function HugeSlides(options) {
             speed = dist / (time / 1000); // pixels per second
             speed2 = dist2 / (time / 1000); // pixels per second
 
-            //$('log').innerHTML = 'Speed is ' + Math.abs(Math.round(speed)) + ' pixels per second!';
+            //'Speed is ' + Math.abs(Math.round(speed)) + ' pixels per second!';
             scroll = setInterval(extraScroll, step);
             scroll2 = setInterval(extraScroll2, step);
 
-            //testEl.ontouchmove = testEl.ontouchend = testEl.onmousemove = document.onmouseup = null;
             if (browser.touch) {
                 testEl.removeEventListener('touchend', endDrag, false);
                 testEl.removeEventListener('touchmove', moveDrag, false);
@@ -212,7 +206,6 @@ function HugeSlides(options) {
             distance += Math.round(speed * (step / 1000));
             var newPos = startPos + distance;
             if (newPos > max || newPos < min) {
-                //console.log('left', ' max ', max, ' min ', min, ' newPos ', newPos);
                 clearInterval(scroll);
                 return;
             }
@@ -228,7 +221,6 @@ function HugeSlides(options) {
             distance2 += Math.round(speed2 * (step / 1000));
             var newPos2 = startPos2 + distance2;
             if (newPos2 > max2 || newPos2 < min2) {
-                //console.log('top', ' max ', max2, ' min ', min2, ' newPos ', newPos2);
                 clearInterval(scroll2);
                 return;
             }
@@ -270,7 +262,6 @@ function HugeSlides(options) {
 
     // запуск/остановка перетаскивания картинки
     function setOrRemoveDragHandlers(currentIndex) {
-
         if (zoom) {
             removeTouchListeners();
         } else {
@@ -279,7 +270,7 @@ function HugeSlides(options) {
 
         clearInterval(scroll);
         clearInterval(scroll2);
-        console.log('startDrag ', currentIndex);
+
         var el, i = newComicsLinksLength;
         while (i--) {
             el = allImagesComics[i];
@@ -307,7 +298,6 @@ function HugeSlides(options) {
 
     function zoomIn(curImg, i) {
         var curImgW, curImgH;
-        console.log("zoomIn ", i);
         curImg.width = curImgW = curImg.getAttribute('data-widthImg') || 300;
         curImg.height = curImgH = curImg.getAttribute('data-heightImg') || 500;
         curImg.setAttribute('data-zoomed', '1');
@@ -327,7 +317,6 @@ function HugeSlides(options) {
 
     function zoomOut(curImg, i) {
         var curImgW, curImgH, smallSize;
-        console.log("zoomOut ", i);
         curImgW = curImg.getAttribute('data-widthImg') || 300;
         curImgH = curImg.getAttribute('data-heightImg') || 500;
         curImg.setAttribute('data-zoomed', '0');
@@ -391,15 +380,12 @@ function HugeSlides(options) {
                 return false;
             }
             imageCounter++;
-            // console.log('pluse', imageCounter);
             var t = this,
                 w = t.width,
                 h = t.height,
                 size = getNewSize(w, h);
 
-            canvasEl.offsetParent.className = 'imagesComicsItem';
-
-            // console.log('1ONLOAD', newComicsLinks[index], this, w);
+            canvasEl.parentNode.className = 'imagesComicsItem';
             canvasEl.setAttribute('data-widthImg', w);
             canvasEl.setAttribute('data-heightImg', h);
 
@@ -408,7 +394,6 @@ function HugeSlides(options) {
             } else {
                 centering(canvasEl, size);
             }
-
 
             if (canvasEl.getAttribute('data-zoomed') === '1') {
                 canvasEl.width = w;
@@ -440,7 +425,6 @@ function HugeSlides(options) {
         if (nextIndex >= length) {
             return false;
         }
-        //console.log('nextIndex ', nextIndex);
         preload(newComicsLinks[nextIndex], nextIndex);
     }
 
@@ -517,7 +501,6 @@ function HugeSlides(options) {
     }
 
     function slide(to, slideSpeed) {
-        //console.log('go');
         // do nothing if already on requested slide
         if (index == to) return;
 
@@ -554,7 +537,6 @@ function HugeSlides(options) {
         index = to;
         setOrRemoveDragHandlers(index);
         preloadNext(index);
-        //console.log( 'cur mouse ', index);
         currentSlideIndicator.text(index + 1);
         offloadFn(options.callback && options.callback(index, slides[index]));
     }
@@ -831,6 +813,26 @@ function HugeSlides(options) {
         element.removeEventListener('touchend', events, false);
     }
 
+    function show(e) {
+        e.preventDefault();
+        $(document.body).addClass('scrollHide');
+        blackoutComics.fadeIn(100);
+        bodyComics.fadeIn(800, function () {
+            setup();
+        });
+        return false;
+    }
+
+    function close(e) {
+        e.stopPropagation();
+        bodyComics.hide();
+        blackoutComics.fadeOut(800);
+        $(document.body).removeClass('scrollHide');
+    }
+
+    // controls
+    link.on('click', show);
+    exitComics.on('click', close);
     nextComics.on('click', next);
     prevComics.on('click', prev);
 
@@ -909,7 +911,7 @@ if (window.jQuery || window.Zepto) {
     (function ($) {
         $.fn.HugeSlides = function (params) {
             return this.each(function () {
-                $(this).data('HugeSlides', new HugeSlides($(this)[0], params));
+                $(this).data('HugeSlides', new HugeSlides($(this), params));
             });
         }
     })(window.jQuery || window.Zepto)
