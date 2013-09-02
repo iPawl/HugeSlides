@@ -226,7 +226,7 @@ html, body {
     top: 47px;
     width: 35px;
     background-color: rgba(0, 0, 0, 0.4);
-    z-index: 10;
+    z-index: 2000;
 }
 
 .exitComics:after, .exitComics:before {
@@ -485,6 +485,7 @@ html, body {
         top: auto;
         left: 20px;
         bottom: 20px;
+        z-index: 2000;
     }
 
     .imagesComics {

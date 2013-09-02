@@ -140,6 +140,8 @@ function HugeSlides(link, options) {
         }
     }
 
+    var position = 500, position2 = 500;
+
     // перетаскивание картинки
     function startDrag(e) {
         var testEl = allImagesComics[index],
@@ -154,13 +156,17 @@ function HugeSlides(link, options) {
             startPos,
             speed,
             distance = 0,
-            min = -elWidth / 2,
-            max = $(window).width() - elWidth / 2,
+           // min = -elWidth / 2,
+            min = -position + $(window).width() / 2,
+            //max = $(window).width() - elWidth / 2,
+            max = $(window).width() / 2,
 
             startPos2,
             speed2,
             distance2 = 0,
-            min2 = -elHeight / 2,
+           // min2 = -elHeight / 2,
+           // max2 = $(window).height() / 2;
+            min2 = -position2 + $(window).height() / 2,
             max2 = $(window).height() / 2;
 
         clearInterval(scroll);
@@ -302,6 +308,9 @@ function HugeSlides(link, options) {
         curImg.height = curImgH = curImg.getAttribute('data-heightImg') || 500;
         curImg.setAttribute('data-zoomed', '1');
 
+        position = curImgW;
+        position2 = curImgH;
+
         if (browser.touch) {
             curImg.style.backgroundImage = 'url(' + newComicsLinks[i] + ')';
             curImg.style.position = 'absolute';
@@ -346,6 +355,20 @@ function HugeSlides(link, options) {
             wH = w.height();
         c.width = wW;
         c.height = wH;
+    }
+
+    function responsive() {
+        var el, i = newComicsLinksLength;
+        while (i--) {
+            el = allImagesComics[i];
+            if (browser.touch) {
+                el.style.position = 'relative';
+                el.style.left = 0;
+                el.style.top = 0;
+                resizeCanvas(el);
+                console.log(el);
+            }
+        }
     }
 
     function getNewSize(w, h) {
@@ -815,19 +838,29 @@ function HugeSlides(link, options) {
 
     function show(e) {
         e.preventDefault();
+
+        document.body.addEventListener('touchstart', stopScrolling, false);
+        document.body.addEventListener('touchmove', stopScrolling, false);
         $(document.body).addClass('scrollHide');
         blackoutComics.fadeIn(100);
         bodyComics.fadeIn(800, function () {
             setup();
+            responsive();
         });
         return false;
     }
 
     function close(e) {
         e.stopPropagation();
+        document.body.removeEventListener('touchstart', stopScrolling, false);
+        document.body.removeEventListener('touchmove', stopScrolling, false);
         bodyComics.hide();
         blackoutComics.fadeOut(800);
         $(document.body).removeClass('scrollHide');
+    }
+
+    function stopScrolling(e) {
+        e.preventDefault();
     }
 
     // controls
@@ -835,6 +868,9 @@ function HugeSlides(link, options) {
     exitComics.on('click', close);
     nextComics.on('click', next);
     prevComics.on('click', prev);
+    controlsComicsNext.on('click', next);
+    controlsComicsPrev.on('click', prev);
+
 
     // API
     var API = {
