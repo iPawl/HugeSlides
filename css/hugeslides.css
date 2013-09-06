@@ -35,7 +35,6 @@ small {
 }
 
 a {
-    font-size: 12px;
     color: #3c3c3c;
 }
 
@@ -174,7 +173,6 @@ html, body {
     text-align: center;
     overflow: hidden;
 }
-
 
 .imagesComics canvas {
     position: relative;
@@ -359,9 +357,11 @@ html, body {
 .zoomOut .zoomComics_in:before {
     display: none;
 }
+
 .zoomOut {
     opacity: 0.5;
 }
+
 /* Loading Circle */
 .loadImg:after {
     content: "";
@@ -382,6 +382,7 @@ html, body {
     -moz-animation: spin .5s infinite linear;
     -webkit-animation: spin .5s infinite linear;
 }
+
 .loadImg:before {
     content: "";
     display: block;
@@ -392,7 +393,7 @@ html, body {
     width: 48px;
     height: 48px;
     background-color: rgba(0, 0, 0, 0.7);
-    margin: -24px 0 0  -24px;
+    margin: -24px 0 0 -24px;
     border-radius: 4px 4px 4px 4px;
 }
 

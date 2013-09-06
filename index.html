@@ -7,7 +7,7 @@
     <link href='css/hugeslides.css' rel='stylesheet'/>
 </head>
 <body>
-<a href="#" class="myHugeSlides"><h2>Click me</h2></a>
+<h1><a href="#" class="myHugeSlides">Click me</a></h1>
 <!--big-pictures preview-->
 <script type="text/javascript">
     var comicsPreviewLinks = ["big-pictures/10.jpg", "big-pictures/11.jpg", "big-pictures/12.jpg", "big-pictures/13.jpg"];
@@ -27,8 +27,10 @@
         // callback: function(index, element) {console.log( 'cur ', index);},
         // transitionEnd: function(index, element) {}
     // });
+            $(document).ready (function () {
+                var myHugeSlidesAPI = $('.myHugeSlides').HugeSlides({comicsPreviewLinks: comicsPreviewLinks}).data('HugeSlides');
+            });
 
-    var myHugeSlidesAPI = $('.myHugeSlides').HugeSlides({comicsPreviewLinks: comicsPreviewLinks}).data('HugeSlides');
 </script>
 </body>
 </html>

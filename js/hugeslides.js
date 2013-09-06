@@ -375,7 +375,6 @@ function HugeSlides(link, options) {
                 el.style.left = 0;
                 el.style.top = 0;
                 resizeCanvas(el);
-                console.log(el);
             }
         }
     }
@@ -873,12 +872,19 @@ function HugeSlides(link, options) {
     }
 
     // controls
-    link.on('click', show);
-    exitComics.on('click', close);
-    nextComics.on('click', next);
-    prevComics.on('click', prev);
-    controlsComicsNext.on('click', next);
-    controlsComicsPrev.on('click', prev);
+    console.log(link)
+    link.addEventListener("touchstart", show, false);
+    //link.on('click', show);
+    //exitComics.on('click', close);
+    exitComics[0].addEventListener("touchstart", close, false);
+   // nextComics.on('click', next);
+    nextComics[0].addEventListener("touchstart", next, false);
+    //prevComics.on('click', prev);
+    prevComics[0].addEventListener("touchstart", prev, false);
+   // controlsComicsNext.on('click', next);
+    controlsComicsNext[0].addEventListener("touchstart", next, false);
+   // controlsComicsPrev.on('click', prev);
+    controlsComicsPrev[0].addEventListener("touchstart", prev, false);
 
 
     // API
@@ -956,7 +962,7 @@ if (window.jQuery || window.Zepto) {
     (function ($) {
         $.fn.HugeSlides = function (params) {
             return this.each(function () {
-                $(this).data('HugeSlides', new HugeSlides($(this), params));
+                $(this).data('HugeSlides', new HugeSlides(this, params));
             });
         }
     })(window.jQuery || window.Zepto)
