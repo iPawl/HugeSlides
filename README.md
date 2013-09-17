@@ -3,6 +3,12 @@ Huge Slides beta 1
 
 With HugeSlides, quickly and easily view big pics and more.
 
+* IE9+
+* Mobile browsers support
+* Touch events
+* Double tap for zoom
+* CSS3 Transitions
+* Responsive slider
 
 ## API documentation
 ### Example
