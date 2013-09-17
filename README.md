@@ -12,9 +12,15 @@ With HugeSlides, quickly and easily view big pics and more.
 
 ## API documentation
 ### Example
+Start element and link to the API
+
+with jQuery
 ``` js
-$('.myHugeSlides').HugeSlides({/*Settings*/}); // link to start
-var myHugeSlidesAPI = $('.myHugeSlides').data('HugeSlides'); // or link to the API
+var myHugeSlidesAPI = $('.myHugeSlides').HugeSlides({/*Settings*/}).data('HugeSlides') 
+```
+without jQuery
+``` js
+var myHugeSlidesAPI =  new HugeSlides(document.getElementById('start-button'), {/*Settings*/})
 ```
 
 ### Settings
