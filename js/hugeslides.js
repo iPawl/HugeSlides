@@ -40,11 +40,11 @@ function HugeSlides(link, options) {
         speed = options.speed || 300,
 
     // filter  img  URls
-        newComicsLinks = [],
-        allImagesComics = [],
-        allDOMImgComics = [],
+        newComicsLinks = [],// TODO DELETE или заменить везде на slidesList , т.к. часто используется
+        allImagesComics = [],   // TODO DELETE
+        allDOMImgComics = [],   // TODO DELETE
         imgCorrectUrl = /\.(jpg|png|gif|bmp)$/i,
-        imageCounter = 0,
+        imageCounter = 0,    // TODO DELETE
 
     // create inteface
         blackoutComics = $('<div class="blackoutComics"></div>'),
@@ -65,7 +65,7 @@ function HugeSlides(link, options) {
         win = $(window),
         scroll,
         scroll2,
-        zoom = false;
+        zoom = false;   // TODO DEL
 
 
     bodyComics
@@ -95,34 +95,114 @@ function HugeSlides(link, options) {
 
     $(document.body).append(blackoutComics).append(bodyComics);
 
+    var slidesList = [];   // массив из объектов слайдов
 
-    for (var i = 0, comicsLinksLength = options.comicsPreviewLinks.length; i < comicsLinksLength; i++) {
+    function Slide() {
+        this.divSlide = undefined;
+        this.canvas = undefined;
+        this.img = undefined;
+        this.imgLink = undefined;
+        this.imgComplete = false;
+        this.imgWidth = 500;
+        this.imgHeight = 500;
+    }
+
+    Slide.prototype = {
+
+        zoomed: false,  // false - состояние без зума
+        slidesLength: 0, // количество всех слайдов
+
+        setNewSize: function () {  // canvas resize
+            var x = (win.height() - 130 - 20) / this.imgHeight,
+                wx = this.imgWidth * x,
+                hx = this.imgHeight * x; // высота canvas
+            this.canvas.width = wx;
+            this.canvas.height = hx;
+        },
+
+        drawImage: function (setZoomedSize) {  // перерисовка изображения в canvas
+            if (browser.touch) {
+                this.canvas.style.backgroundImage = 'url(' + this.imgLink + ')'; // mobile
+            } else {
+                // desktop
+                if (this.zoomed) {
+                    this.setNewSize();
+                    this.canvas.getContext("2d").drawImage(this.img, 0, 0, this.canvas.width, this.canvas.height);  // по значению на canvas //TODO быть может неправильно считывать canvas.width canvas.height, придумать альтернативу
+                } else {
+                    this.canvas.getContext("2d").drawImage(this.img, 0, 0, this.imgWidth, this.imgHeight);  // по размеру без зумирования
+                }
+            }
+        },
+
+        complete: function (slideObj) {
+            slideObj.imgWidth = slideObj.img.width;
+            slideObj.imgHeight = slideObj.img.height;
+            slideObj.divSlide.className = 'imagesComicsItem';
+            if (slideObj.zoomed) { // TODO тут наверно нужна центрация
+                slideObj.canvas.width = slideObj.imgWidth;
+                slideObj.canvas.height = slideObj.imgHeight;
+            }
+            slideObj.drawImage();
+        },
+
+        preload: function (index) {
+            if (index + 1 > this.slidesLength) return false;
+            var curSlideObj = slidesList[index];
+            if (curSlideObj.img.complete) {
+                this.complete;
+                return false;
+            }
+            curSlideObj.img.src = curSlideObj.imgLink;
+            $(curSlideObj.img).one('load', this.complete);
+            curSlideObj.img.src = curSlideObj.imgLink; // хак для странных браузеров
+        }
+    };
+
+    /*****************************
+     * Создаем компоненты Слайдера
+     *****************************/
+
+    for (var i = 0, slideObj, comicsLinksLength = options.comicsPreviewLinks.length; i < comicsLinksLength; i++) {
         if (imgCorrectUrl.test(options.comicsPreviewLinks[i])) {
-            newComicsLinks.push(options.comicsPreviewLinks[i])
+            slideObj = new Slide();
+            Slide.prototype.slidesLength = i;                                                               // общее количество слайдов
+            slideObj.canvas = document.createElement("canvas");
+            slideObj.canvas.top = '130px';   // TODO упростить
+            slideObj.canvas.addEventListener('touchend', doubleTap, false);   // TODO упростить
+            slideObj.setNewSize();                                                                          // подстройка размера canvas под размер окна
+            slideObj.divSlide = document.createElement("div");                                              // контейнер слайда
+            slideObj.divSlide.className = "imagesComicsItem loadImg";
+            slideObj.divSlide.appendChild(slideObj.canvas);                                                 // div."imagesComicsItem loadImg">canvas
+            slideObj.img = document.createElement("img");                                                   // набиваем фрагмент слайдами
+            slideObj.imgLink = options.comicsPreviewLinks[i];
+            slidesList.push(slideObj);                                                                      // добавляем объект слайда в массив
+            content.appendChild(slideObj.divSlide);                                                         // собираем все контейнеры слайдов для вставки в DOM
         }
     }
 
-    var newComicsLinksLength = newComicsLinks.length;
-    totalPagesInfoComics.text(newComicsLinksLength);
+    element.appendChild(content);   // вставляем контейнеры слайдов в DOM
 
-    // создаем слайды с картинками
-    for (var i = 0, canvas, div; i < newComicsLinksLength; i++) {
-        cSize = getNewSize(500, 500);
-        canvas = document.createElement("canvas");
-        canvas.width = cSize.w;
-        canvas.height = cSize.h;
-        canvas.top = "130px";
-        canvas.addEventListener('touchend', doubleTap, false);
-        div = document.createElement("div");
-        div.className = "imagesComicsItem loadImg";
-        div.appendChild(canvas);
-        content.appendChild(div);
+    var newComicsLinksLength = newComicsLinks.length;     // TODO DELETE
+    totalPagesInfoComics.text(newComicsLinksLength);     // TODO поменять после удаления newComicsLinks
 
-        allImagesComics.push(canvas);
-    }
+    /*    // создаем слайды с картинками
+     for (var i = 0, canvas, div; i < newComicsLinksLength; i++) {
+     cSize = getNewSize(500, 500);
+     canvas = document.createElement("canvas");
+     canvas.width = cSize.w;
+     canvas.height = cSize.h;
+     canvas.top = "130px";
+     canvas.addEventListener('touchend', doubleTap, false);
+     div = document.createElement("div");
+     div.className = "imagesComicsItem loadImg";
+     div.appendChild(canvas);
+     content.appendChild(div);
 
-    //добавляем слайды в основной контейнер
-    element.appendChild(content);
+     allImagesComics.push(canvas);
+     }
+
+     //добавляем слайды в основной контейнер
+     element.appendChild(content);*/
 
 
     function doubleTap(e) {
