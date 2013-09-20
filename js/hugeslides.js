@@ -165,16 +165,16 @@ function HugeSlides(link, options) {
             startPos,
             speed,
             distance = 0,
-           // min = -elWidth / 2,
+        // min = -elWidth / 2,
             min = -position + $(window).width() / 2,
-            //max = $(window).width() - elWidth / 2,
+        //max = $(window).width() - elWidth / 2,
             max = $(window).width() / 2,
 
             startPos2,
             speed2,
             distance2 = 0,
-           // min2 = -elHeight / 2,
-           // max2 = $(window).height() / 2;
+        // min2 = -elHeight / 2,
+        // max2 = $(window).height() / 2;
             min2 = -position2 + $(window).height() / 2,
             max2 = $(window).height() / 2;
 
@@ -872,20 +872,16 @@ function HugeSlides(link, options) {
     }
 
     // controls
-    console.log(link)
-    link.addEventListener("touchstart", show, false);
-    //link.on('click', show);
-    //exitComics.on('click', close);
-    exitComics[0].addEventListener("touchstart", close, false);
-   // nextComics.on('click', next);
-    nextComics[0].addEventListener("touchstart", next, false);
-    //prevComics.on('click', prev);
-    prevComics[0].addEventListener("touchstart", prev, false);
-   // controlsComicsNext.on('click', next);
-    controlsComicsNext[0].addEventListener("touchstart", next, false);
-   // controlsComicsPrev.on('click', prev);
-    controlsComicsPrev[0].addEventListener("touchstart", prev, false);
+    var touchClick = browser.touch ? 'touchstart' : 'mousedown';
 
+    if (browser.addEventListener) {
+        link.addEventListener(touchClick, show, false);
+        exitComics[0].addEventListener(touchClick, close, false);
+        nextComics[0].addEventListener(touchClick, next, false);
+        prevComics[0].addEventListener(touchClick, prev, false);
+        controlsComicsNext[0].addEventListener(touchClick, next, false);
+        controlsComicsPrev[0].addEventListener(touchClick, prev, false);
+    }
 
     // API
     var API = {
@@ -935,6 +931,7 @@ function HugeSlides(link, options) {
                 slide.style.left = 0;
                 if (browser.transitions) translate(pos, 0, 0);
             }
+
 
             // removed event listeners
             if (browser.addEventListener) {
