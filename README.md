@@ -18,10 +18,6 @@ with jQuery
 ``` js
 var myHugeSlidesAPI = $('.myHugeSlides').HugeSlides({/*Settings*/}).data('HugeSlides') 
 ```
-//without jQuery
-//``` js
-//var myHugeSlidesAPI =  new HugeSlides(document.getElementById('start-button'), {/*Settings*/})
-//```
 
 ### Settings
 
