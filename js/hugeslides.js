@@ -76,22 +76,22 @@ function HugeSlides(link, options) {
         .append(nextComics);
 
 
-    if (!browser.touch) {
-        var zoomComics = $('<div class="zoomComics" data-zoom="in"><div class="zoomComics_in"></div></div>');
-        bodyComics.append(zoomComics);
-        zoomComics.click(function () {
-            var t = $(this);
-            if (zoom) {
-                zoom = false;
-                setOrRemoveDragHandlers(-1);
-                t.removeClass('zoomOut');
-            } else {
-                zoom = true;
-                setOrRemoveDragHandlers(index);
-                t.addClass('zoomOut');
-            }
-        });
-    }  // adaptive zoom button
+    /*    if (!browser.touch) {
+     var zoomComics = $('<div class="zoomComics" data-zoom="in"><div class="zoomComics_in"></div></div>');
+     bodyComics.append(zoomComics);
+     zoomComics.click(function () {
+     var t = $(this);
+     if (zoom) {
+     zoom = false;
+     setOrRemoveDragHandlers(-1);
+     t.removeClass('zoomOut');
+     } else {
+     zoom = true;
+     setOrRemoveDragHandlers(index);
+     t.addClass('zoomOut');
+     }
+     });
+     }  // adaptive zoom button*/
 
     $(document.body).append(blackoutComics).append(bodyComics);
 
@@ -145,17 +145,25 @@ function HugeSlides(link, options) {
             slideObj.drawImage();
         },
 
-        preload: function (index) {
+        preload: function (index) {   // предзагрузка картинки по индексу
             if (index + 1 > this.slidesLength) return false;
             var curSlideObj = slidesList[index];
-            if (curSlideObj.img.complete) {
-                this.complete;
+            if (curSlideObj.img.complete) {      // TODO надо собрать все и исключить повторения проверок
+                this.complete();
                 return false;
             }
             curSlideObj.img.src = curSlideObj.imgLink;
             $(curSlideObj.img).one('load', this.complete);
             curSlideObj.img.src = curSlideObj.imgLink; // хак для странных браузеров
+        },
+        preloadNext: function (curIndex) {
+            var nextIndex = curIndex + 1;
+            if (nextIndex >= this.slidesLength) {
+                return false;
+            }
+            this.preload(nextIndex);
         }
+
     };
 
     /*****************************
@@ -165,10 +173,10 @@ function HugeSlides(link, options) {
     for (var i = 0, slideObj, comicsLinksLength = options.comicsPreviewLinks.length; i < comicsLinksLength; i++) {
         if (imgCorrectUrl.test(options.comicsPreviewLinks[i])) {
             slideObj = new Slide();
-            Slide.prototype.slidesLength = i;                                                               // общее количество слайдов
+            Slide.prototype.slidesLength = i+1;                                                               // общее количество слайдов
             slideObj.canvas = document.createElement("canvas");
             slideObj.canvas.top = '130px';   // TODO упростить
-            slideObj.canvas.addEventListener('touchend', doubleTap, false);   // TODO упростить
+            //slideObj.canvas.addEventListener('touchend', doubleTap, false);   // TODO упростить
             slideObj.setNewSize();                                                                          // подстройка размера canvas под размер окна
             slideObj.divSlide = document.createElement("div");                                              // контейнер слайда
             slideObj.divSlide.className = "imagesComicsItem loadImg";
@@ -179,7 +187,7 @@ function HugeSlides(link, options) {
             content.appendChild(slideObj.divSlide);                                                         // собираем все контейнеры слайдов для вставки в DOM
         }
     }
-
+    console.log(slidesList);
     element.appendChild(content);   // вставляем контейнеры слайдов в DOM
 
     var newComicsLinksLength = newComicsLinks.length;     // TODO DELETE
@@ -474,70 +482,70 @@ function HugeSlides(link, options) {
     }
 
     // preload img
-    function preload(url, index) {
-        if (index + 1 > newComicsLinksLength) {
-            return false;
-        }
+    /*function preload(url, index) {
+     if (index + 1 > newComicsLinksLength) {
+     return false;
+     }
 
-        var canvasEl = allImagesComics[index],
-            c = canvasEl.getContext("2d");
-        var $img = $("<img />"),
-            img = $img[0];
+     var canvasEl = allImagesComics[index],
+     c = canvasEl.getContext("2d");
+     var $img = $("<img />"),
+     img = $img[0];
 
-        img.src = newComicsLinks[index];
+     img.src = newComicsLinks[index];
 
-        $img.one('load',function () {
-            if (index + 1 > newComicsLinksLength) {
-                return false;
-            }
-            imageCounter++;
-            var t = this,
-                w = t.width,
-                h = t.height,
-                size = getNewSize(w, h);
+     $img.one('load',function () {
+     if (index + 1 > newComicsLinksLength) {
+     return false;
+     }
+     imageCounter++;
+     var t = this,
+     w = t.width,
+     h = t.height,
+     size = getNewSize(w, h);
 
-            canvasEl.parentNode.className = 'imagesComicsItem';
-            canvasEl.setAttribute('data-widthImg', w);
-            canvasEl.setAttribute('data-heightImg', h);
+     canvasEl.parentNode.className = 'imagesComicsItem';
+     canvasEl.setAttribute('data-widthImg', w);
+     canvasEl.setAttribute('data-heightImg', h);
 
-            if (zoom) {
-                centering(canvasEl, {w: w, h: h});
-            } else {
-                centering(canvasEl, size);
-            }
+     if (zoom) {
+     centering(canvasEl, {w: w, h: h});
+     } else {
+     centering(canvasEl, size);
+     }
 
-            if (canvasEl.getAttribute('data-zoomed') === '1') {
-                canvasEl.width = w;
-                canvasEl.height = h;
-                c.drawImage(t, 0, 0, w, h);
+     if (canvasEl.getAttribute('data-zoomed') === '1') {
+     canvasEl.width = w;
+     canvasEl.height = h;
+     c.drawImage(t, 0, 0, w, h);
 
-            } else {
-                if (browser.touch) {
-                    canvasEl.style.backgroundImage = 'url(' + newComicsLinks[index] + ')';
-                } else {
-                    canvasEl.width = size.w;
-                    canvasEl.height = size.h;
-                    c.drawImage(t, 0, 0, size.w, size.h);
-                }
-            }
+     } else {
+     if (browser.touch) {
+     canvasEl.style.backgroundImage = 'url(' + newComicsLinks[index] + ')';
+     } else {
+     canvasEl.width = size.w;
+     canvasEl.height = size.h;
+     c.drawImage(t, 0, 0, size.w, size.h);
+     }
+     }
 
-            allDOMImgComics[index] = t;
+     allDOMImgComics[index] = t;
 
-        }).each(function () {
-                if (this.complete) $(this).load();
-            });
+     }).each(function () {
+     if (this.complete) $(this).load();
+     });
 
-        img.src = newComicsLinks[index];
+     img.src = newComicsLinks[index];
 
-    }
+     }*/
 
-    function preloadNext(curIndex) {
-        var nextIndex = curIndex + 1;
-        if (nextIndex >= length) {
-            return false;
-        }
-        preload(newComicsLinks[nextIndex], nextIndex);
-    }
+    /*    function preloadNext(curIndex) {
+     var nextIndex = curIndex + 1;
+     if (nextIndex >= length) {
+     return false;
+     }
+     preload(newComicsLinks[nextIndex], nextIndex);
+     }*/
 
     function setup() {
 
@@ -549,12 +557,12 @@ function HugeSlides(link, options) {
         if (length < 2) options.continuous = false;
 
         // предзагрузка стартовых картинок
-        if (length !== 0) {
-            preload(newComicsLinks[0], 0);
-            if (length > 1) {
-                preload(newComicsLinks[1], 1);
-            }
-        }
+//        if (length !== 0) {
+//            preload(newComicsLinks[0], 0);
+//            if (length > 1) {
+//                preload(newComicsLinks[1], 1);
+//            }
+//        }
 
         //special case if two slides
         if (browser.transitions && options.continuous && slides.length < 3) {
@@ -646,8 +654,8 @@ function HugeSlides(link, options) {
         }
 
         index = to;
-        setOrRemoveDragHandlers(index);
-        preloadNext(index);
+        //setOrRemoveDragHandlers(index);
+        // preloadNext(index);
         currentSlideIndicator.text(index + 1);
         offloadFn(options.callback && options.callback(index, slides[index]));
     }
@@ -862,7 +870,7 @@ function HugeSlides(link, options) {
                         index = circle(index - 1);
                     }
 
-                    preloadNext(index);
+                    // preloadNext(index);
                     currentSlideIndicator.text(index + 1);
                     options.callback && options.callback(index, slides[index]);
                 } else {
