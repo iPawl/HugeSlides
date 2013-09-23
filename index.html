@@ -16,7 +16,7 @@
 <!--/big-pictures preview-->
 
 <script src="js/jquery-1.10.2.min.js"></script>
-<script src='js/hugeslides.js'></script>
+<script src='js/hugeslides.js?1234'></script>
 <script>
     //var myHugeSlides = HugeSlides({
        // comicsPreviewLinks: comicsPreviewLinks,
@@ -29,7 +29,7 @@
         // transitionEnd: function(index, element) {}
     // });
             $(document).ready (function () {
-                var myHugeSlidesAPI = $('.myHugeSlides').HugeSlides({comicsPreviewLinks: comicsPreviewLinks}).data('HugeSlides');
+                var myHugeSlidesAPI = $('.myHugeSlides').HugeSlides({comicsPreviewLinks: comicsPreviewLinks, continuous: false}).data('HugeSlides');
             });
 
 </script>
