@@ -98,9 +98,10 @@ function HugeSlides(link, options) {
     var slidesList = [];   // массив из объектов слайдов
 
     function Slide() {
-        this.divSlide = undefined;
-        this.canvas = undefined;
-        this.img = undefined;
+        this.divSlide = document.createElement("div");                // контейнер слайда
+        this.divSlide.className = "imagesComicsItem loadImg";
+        this.canvas = document.createElement("canvas");
+        this.img = document.createElement("img");
         this.imgLink = undefined;
         this.imgLoaded = false;
         this.imgWidth = 500;
@@ -114,23 +115,30 @@ function HugeSlides(link, options) {
         //slidesLoaded: false,                                     // если все картинки слайдов будут загруженны, то станет true
 
         setNewSize: function () {  // canvas resize
-            var x = (win.height() - 130 - 20) / this.imgHeight,
-                wx = this.imgWidth * x,
-                hx = this.imgHeight * x; // высота canvas
-            this.canvas.width = wx;
-            this.canvas.height = hx;
+            if (browser.touch) {
+                this.canvas.width = win.width();
+                this.canvas.height = win.height();
+                this.canvas.style.top = '0px';
+            } else {
+                var x = (win.height() - 130 - 20) / this.imgHeight,
+                    wx = this.imgWidth * x,
+                    hx = this.imgHeight * x; // высота canvas
+                this.canvas.width = wx;
+                this.canvas.height = hx;
+            }
         },
 
-        drawImage: function (setZoomedSize) {  // перерисовка изображения в canvas
+        fill: function (setZoomedSize) {  // перерисовка изображения в canvas
             if (browser.touch) {
                 this.canvas.style.backgroundImage = 'url(' + this.imgLink + ')'; // mobile
             } else {
                 // desktop
                 if (this.zoomed) {
+                    this.canvas.getContext("2d").drawImage(this.img, 0, 0, this.imgWidth, this.imgHeight);  // по размеру без зумирования
+                } else {
                     this.setNewSize();
                     this.canvas.getContext("2d").drawImage(this.img, 0, 0, this.canvas.width, this.canvas.height);  // по значению на canvas //TODO быть может неправильно считывать canvas.width canvas.height, придумать альтернативу
-                } else {
-                    this.canvas.getContext("2d").drawImage(this.img, 0, 0, this.imgWidth, this.imgHeight);  // по размеру без зумирования
+                    console.log('set new', this.canvas.width);
                 }
             }
         },
@@ -143,7 +151,7 @@ function HugeSlides(link, options) {
                 this.canvas.width = this.imgWidth;
                 this.canvas.height = this.imgHeight;
             }
-            this.drawImage();
+            this.fill();
             this.imgLoaded = true;
             console.log(' bang loaded', this.img);
         },
@@ -154,13 +162,11 @@ function HugeSlides(link, options) {
             if (i) t = slidesList[i];
             if (t.imgLoaded) return false;                                             // если картинка загруженна или в кеше
             if (t.img.complete && t.img.height > 0) {                                 // если уже в кеше
-                console.log(this.img, 'уже в кеше');
                 t.loaded();
                 return false;
             }
             t.img.src = t.imgLink;                                                     // скармливаем ссылку на картинку
             $(t.img).one('load', function () {
-                console.log('load ', t.img);
                 t.loaded.call(t)
             });
             t.img.src = t.imgLink;                                                     // хак для странных браузеров
@@ -172,6 +178,35 @@ function HugeSlides(link, options) {
             var nextSlide = slidesList[nextIndex];
             if (nextSlide.imgLoaded) return false;                                       // если картинка загруженна или в кеше
             nextSlide.preload();
+        },
+
+        setDoubleTap: function () {
+            if (!browser.touch) return false;
+            var _this = this;
+            this.canvas.addEventListener('touchend', function (e) {
+                _this.doubleTap.call(_this, e)
+            }, false);
+        },
+
+        doubleTap: function (e) {
+            var delay = 300,
+                now = new Date().getTime(),
+                lastTouch = this.lastTouch || now + 1,
+                delta = now - lastTouch;
+            if (delta < delay && 0 < delta) {
+                this.lastTouch = null;
+                console.log('double');
+                /*                if (zoom) {
+                 zoom = false;
+                 setOrRemoveDragHandlers(-1);
+                 } else {
+                 zoom = true;
+                 setOrRemoveDragHandlers(index);
+                 }*/
+
+            } else {
+                this.lastTouch = now;
+            }
         }
 
     };
@@ -184,20 +219,15 @@ function HugeSlides(link, options) {
         if (imgCorrectUrl.test(options.comicsPreviewLinks[i])) {
             slideObj = new Slide();
             Slide.prototype.slidesLength = i + 1;                                                               // общее количество слайдов
-            slideObj.canvas = document.createElement("canvas");
-            slideObj.canvas.top = '130px';   // TODO упростить
-            //slideObj.canvas.addEventListener('touchend', doubleTap, false);   // TODO упростить
+            slideObj.setDoubleTap();
             slideObj.setNewSize();                                                                          // подстройка размера canvas под размер окна
-            slideObj.divSlide = document.createElement("div");                                              // контейнер слайда
-            slideObj.divSlide.className = "imagesComicsItem loadImg";
             slideObj.divSlide.appendChild(slideObj.canvas);                                                 // div."imagesComicsItem loadImg">canvas
-            slideObj.img = document.createElement("img");                                                   // набиваем фрагмент слайдами
             slideObj.imgLink = options.comicsPreviewLinks[i];
             slidesList.push(slideObj);                                                                      // добавляем объект слайда в массив
             content.appendChild(slideObj.divSlide);                                                         // собираем все контейнеры слайдов для вставки в DOM
         }
     }
-    console.log(slidesList);
+    //console.log(slidesList);
     element.appendChild(content);                                           // вставляем контейнеры слайдов в DOM
 
     //var newComicsLinksLength = newComicsLinks.length;     // TODO DELETE
@@ -223,29 +253,29 @@ function HugeSlides(link, options) {
      element.appendChild(content);*/
 
 
-    function doubleTap(e) {
-        var delay = 300;
-        var now = new Date().getTime();
+    /*    function doubleTap(e) {
+     var delay = 300;
+     var now = new Date().getTime();
 
-        // the first time this will make delta a negative number
-        var lastTouch = $(this).data('lastTouch') || now + 1;
-        var delta = now - lastTouch;
-        if (delta < delay && 0 < delta) {
-            // After we detct a doubletap, start over
-            $(this).data('lastTouch', null);
+     // the first time this will make delta a negative number
+     var lastTouch = $(this).data('lastTouch') || now + 1;
+     var delta = now - lastTouch;
+     if (delta < delay && 0 < delta) {
+     // After we detct a doubletap, start over
+     $(this).data('lastTouch', null);
 
-            if (zoom) {
-                zoom = false;
-                setOrRemoveDragHandlers(-1);
-            } else {
-                zoom = true;
-                setOrRemoveDragHandlers(index);
-            }
+     if (zoom) {
+     zoom = false;
+     setOrRemoveDragHandlers(-1);
+     } else {
+     zoom = true;
+     setOrRemoveDragHandlers(index);
+     }
 
-        } else {
-            $(this).data('lastTouch', now);
-        }
-    }
+     } else {
+     $(this).data('lastTouch', now);
+     }
+     }*/
 
     var position = 500, position2 = 500;
 
@@ -464,18 +494,18 @@ function HugeSlides(link, options) {
         c.height = wH;
     }
 
-    function responsive() {
-        var el, i = Slide.prototype.slidesLength;
-        while (i--) {
-            el = allImagesComics[i];
-            if (browser.touch) {
-                el.style.position = 'relative';
-                el.style.left = 0;
-                el.style.top = 0;
-                resizeCanvas(el);
-            }
-        }
-    }
+    /*    function responsive() {
+     var el, i = Slide.prototype.slidesLength;
+     while (i--) {
+     el = allImagesComics[i];
+     if (browser.touch) {
+     el.style.position = 'relative';
+     el.style.left = 0;
+     el.style.top = 0;
+     resizeCanvas(el);
+     }
+     }
+     }*/
 
     function getNewSize(w, h) {
         var x = (win.height() - 130 - 20) / h,
@@ -563,11 +593,6 @@ function HugeSlides(link, options) {
         slides = element.children;
         length = slides.length;
 
-        if (Slide.prototype.slidesLength !== 0) {                               // предзагрузка стартовых картинок слайдов
-            slidesList[0].preload();
-            if (Slide.prototype.slidesLength > 1) slidesList[1].preload();
-        }
-
         // set continuous to false if only one slide
         if (length < 2) options.continuous = false;
 
@@ -585,7 +610,7 @@ function HugeSlides(link, options) {
         width = container.getBoundingClientRect().width || container.offsetWidth;
 
         element.style.width = (slides.length * width) + 'px';
-
+        console.log((slides.length * width) + 'px');
         // stack elements
         var pos = slides.length;
         while (pos--) {
@@ -663,7 +688,8 @@ function HugeSlides(link, options) {
         index = to;
         //setOrRemoveDragHandlers(index);
         // preloadNext(index);
-        offloadFn( Slide.prototype.preloadNext(index));
+        offloadFn(Slide.prototype.preloadNext(index));
+
         currentSlideIndicator.text(index + 1);
 
         offloadFn(options.callback && options.callback(index, slides[index]));
@@ -880,6 +906,7 @@ function HugeSlides(link, options) {
                     }
 
                     // preloadNext(index);
+                    Slide.prototype.preloadNext(index);
                     currentSlideIndicator.text(index + 1);
                     options.callback && options.callback(index, slides[index]);
                 } else {
@@ -910,6 +937,10 @@ function HugeSlides(link, options) {
     // trigger setup
     setup();
 
+    if (Slide.prototype.slidesLength !== 0) {                               // предзагрузка стартовых картинок слайдов
+        slidesList[0].preload();
+        if (Slide.prototype.slidesLength > 1) slidesList[1].preload();
+    }
     // start auto slideshow if applicable
     if (delay) begin();
 
@@ -943,14 +974,14 @@ function HugeSlides(link, options) {
 
     function show(e) {
         e.preventDefault();
-
+        setup();
         document.body.addEventListener('touchstart', stopScrolling, false);
         document.body.addEventListener('touchmove', stopScrolling, false);
         $(document.body).addClass('scrollHide');
         blackoutComics.fadeIn(100);
         bodyComics.fadeIn(800, function () {
             setup();
-            responsive();
+            //responsive();
         });
         return false;
     }
