@@ -128,7 +128,7 @@ function HugeSlides(link, options) {
             }
         },
 
-        fill: function (setZoomedSize) {  // перерисовка изображения в canvas
+        fill: function () {  // перерисовка изображения в canvas
             if (browser.touch) {
                 this.canvas.style.backgroundImage = 'url(' + this.imgLink + ')'; // mobile
             } else {
@@ -138,7 +138,6 @@ function HugeSlides(link, options) {
                 } else {
                     this.setNewSize();
                     this.canvas.getContext("2d").drawImage(this.img, 0, 0, this.canvas.width, this.canvas.height);  // по значению на canvas //TODO быть может неправильно считывать canvas.width canvas.height, придумать альтернативу
-                    console.log('set new', this.canvas.width);
                 }
             }
         },
@@ -147,10 +146,10 @@ function HugeSlides(link, options) {
             this.imgWidth = this.img.width;
             this.imgHeight = this.img.height;
             this.divSlide.className = 'imagesComicsItem';
-            if (this.zoomed) { // TODO тут наверно нужна центрация
-                this.canvas.width = this.imgWidth;
-                this.canvas.height = this.imgHeight;
-            }
+            /*            if (this.zoomed) { // TODO тут наверно нужна центрация + зумирует при первой загрузке
+             this.canvas.width = this.imgWidth;
+             this.canvas.height = this.imgHeight;
+             }*/
             this.fill();
             this.imgLoaded = true;
             console.log(' bang loaded', this.img);
@@ -180,6 +179,152 @@ function HugeSlides(link, options) {
             nextSlide.preload();
         },
 
+
+        setStartDrag: function (add) {
+            var _this = this;
+
+            function onStartDrag(e) {
+                _this.startDrag.call(_this, e)
+            }
+
+            if (add) {
+                if (browser.touch) {
+                    this.canvas.addEventListener('touchstart', onStartDrag, false);
+                } else {
+                    //el.onmousedown = startDrag;      //TODO ДЛЯ КОМПА доработать!
+                }
+            } else {
+                if (browser.touch) {
+                    this.canvas.removeEventListener('touchstart', onStartDrag, false);
+                } else {
+                    // el.onmousedown = null;    //TODO ДЛЯ КОМПА доработать!
+                }
+            }
+        },
+
+        startDrag: function (e) {
+            //var testEl = allImagesComics[index],
+            var testEl = this.canvas,
+                pos = [testEl.offsetLeft, testEl.offsetTop],
+                origin = getCoors(e).left,
+                origin2 = getCoors(e).top,
+                originTime = new Date().getTime(),
+                step = 40,	// in milliseconds
+                elWidth = testEl.width,
+                elHeight = testEl.height,
+                startPos,
+                speed,
+                distance = 0,
+            // min = -elWidth / 2,
+                min = -position + $(window).width() / 2,
+            //max = $(window).width() - elWidth / 2,
+                max = $(window).width() / 2,
+
+                startPos2,
+                speed2,
+                distance2 = 0,
+            // min2 = -elHeight / 2,
+            // max2 = $(window).height() / 2;
+                min2 = -position2 + $(window).height() / 2,
+                max2 = $(window).height() / 2;
+
+            clearInterval(scroll);
+            clearInterval(scroll2);
+
+            if (browser.touch) {
+                testEl.addEventListener('touchmove', moveDrag, false);
+                testEl.addEventListener('touchend', endDrag, false);
+            } else {
+                testEl.onmousemove = moveDrag;
+                document.onmouseup = endDrag;
+            }
+
+            function endDrag(e) {
+                var end = getCoors(e).left,
+                    end2 = getCoors(e).top,
+                    endTime = new Date().getTime(),
+                    dist = end - origin,
+                    dist2 = end2 - origin2,
+                    time = endTime - originTime;
+
+                startPos = testEl.offsetLeft;
+                startPos2 = testEl.offsetTop;
+
+                speed = dist / (time / 1000); // pixels per second
+                speed2 = dist2 / (time / 1000); // pixels per second
+
+                //'Speed is ' + Math.abs(Math.round(speed)) + ' pixels per second!';
+                scroll = setInterval(extraScroll, step);
+                scroll2 = setInterval(extraScroll2, step);
+
+                if (browser.touch) {
+                    testEl.removeEventListener('touchend', endDrag, false);
+                    testEl.removeEventListener('touchmove', moveDrag, false);
+                } else {
+                    testEl.onmousemove = document.onmouseup = null;
+                }
+            }
+
+            return false; // cancels scrolling
+
+            function extraScroll() {
+                distance += Math.round(speed * (step / 1000));
+                var newPos = startPos + distance;
+                if (newPos > max || newPos < min) {
+                    clearInterval(scroll);
+                    return;
+                }
+                testEl.style.left = newPos + 'px';
+                speed *= .85;
+                if (Math.abs(speed) < 10) {
+                    speed = 0;
+                    clearInterval(scroll);
+                }
+            }
+
+            function extraScroll2() {
+                distance2 += Math.round(speed2 * (step / 1000));
+                var newPos2 = startPos2 + distance2;
+                if (newPos2 > max2 || newPos2 < min2) {
+                    clearInterval(scroll2);
+                    return;
+                }
+                testEl.style.top = newPos2 + 'px';
+                speed2 *= .85;
+                if (Math.abs(speed2) < 10) {
+                    speed2 = 0;
+                    clearInterval(scroll2);
+                }
+            }
+
+            function moveDrag(e) {
+                var currentPos = getCoors(e).left,
+                    currentPos2 = getCoors(e).top,
+                    newPos = (currentPos - origin) + pos[0],
+                    newPos2 = (currentPos2 - origin2) + pos[1];
+
+                if (newPos <= max && newPos >= min) {
+                    testEl.style.left = newPos + 'px';
+                }
+                if (newPos2 <= max2 && newPos2 >= min2) {
+                    testEl.style.top = newPos2 + 'px';
+                }
+            }
+
+            function getCoors(e) {
+                var left, top;
+                if (e.changedTouches) {// iPhone
+                    left = e.changedTouches[0].clientX;
+                    top = e.changedTouches[0].clientY;
+                } else {
+                    // all others
+                    left = e.clientX;
+                    top = e.clientY;
+                }
+                return {left: left, top: top};
+            }
+        },
+
         setDoubleTap: function () {
             if (!browser.touch) return false;
             var _this = this;
@@ -195,7 +340,52 @@ function HugeSlides(link, options) {
                 delta = now - lastTouch;
             if (delta < delay && 0 < delta) {
                 this.lastTouch = null;
-                console.log('double');
+
+                // TODO может имеет смысл сделать это отдельным методом
+                var el, i = Slide.prototype.slidesLength;
+                if (this.zoomed) {
+                    //this.zoomOut();           // TODO СЕГОДНЯ!!!
+                    this.setStartDrag(false);
+                    Slide.prototype.zoomed = false;
+                    addTouchListeners();
+                } else {
+                    this.zoomIn();
+                    this.setStartDrag(true);
+                    Slide.prototype.zoomed = true;              // пошло зумирование
+                    removeTouchListeners();                     // удаляем тач слушатели с общего контейнера
+                }
+                console.log('this.zoomed ', this.zoomed);
+                clearInterval(scroll);
+                clearInterval(scroll2);
+
+
+/*                while (i--) {
+                    el = slidesList[i];
+                    if (Slide.prototype.zoomed) {
+                        el.zoomIn();
+                    } else {
+                        // zoomOut(el, i);        // TODO СЕГОДНЯ!!!
+                    }
+                    if (zoom && currentIndex >= 0 && i === currentIndex) {
+                        if (browser.touch) {
+                            el.addEventListener('touchstart', startDrag, false);
+                        } else {
+
+                            el.onmousedown = startDrag;
+                        }
+                    } else {
+                        if (browser.touch) {
+                            el.removeEventListener('touchstart', startDrag, false);
+                        } else {
+                            el.onmousedown = null;
+                        }
+                    }
+                }*/
+
+
+
+
+
                 /*                if (zoom) {
                  zoom = false;
                  setOrRemoveDragHandlers(-1);
@@ -207,6 +397,26 @@ function HugeSlides(link, options) {
             } else {
                 this.lastTouch = now;
             }
+        },
+
+        zoomIn: function () {
+            var curImgW, curImgH;
+            this.canvas.width = curImgW = this.imgWidth || 300;
+            this.canvas.height = curImgH = this.imgHeight || 500;
+            Slide.prototype.zoomed = true;
+
+            position = curImgW;
+            position2 = curImgH;
+
+            if (browser.touch) {                                              //TODO скорее всего такая функция уже есть
+                this.canvas.style.backgroundImage = 'url(' + this.imgLink + ')';   // TODO уточнить, не используется ли повторная заливка
+                this.canvas.style.position = 'absolute';
+            } else {
+                this.canvas.getContext("2d").clearRect(0, 0, curImgW, curImgH);   //TODO  clearRect вообще нужно???
+                this.canvas.getContext("2d").drawImage(this.img, 0, 0, curImgW, curImgH);
+            }
+            this.canvas.style.top = '0';
+            this.canvas.style.left = (win.width() - curImgW) / 2 + 'px';
         }
 
     };
@@ -405,8 +615,8 @@ function HugeSlides(link, options) {
 
     // запуск/остановка перетаскивания картинки
     function setOrRemoveDragHandlers(currentIndex) {
-        if (zoom) {
-            removeTouchListeners();
+        if (Slide.prototype.zoomed) {
+            removeTouchListeners();        // удаляем тач слушатели с общего контейнера
         } else {
             addTouchListeners();
         }
@@ -414,13 +624,13 @@ function HugeSlides(link, options) {
         clearInterval(scroll);
         clearInterval(scroll2);
 
-        var el, i = newComicsLinksLength;
+        var el, i = Slide.prototype.slidesLength;
         while (i--) {
-            el = allImagesComics[i];
-            if (zoom) {
-                zoomIn(el, i);
+            el = slidesList[i];
+            if (Slide.prototype.zoomed) {
+                el.zoomIn();
             } else {
-                zoomOut(el, i);
+                // zoomOut(el, i);
             }
             if (zoom && currentIndex >= 0 && i === currentIndex) {
                 if (browser.touch) {
@@ -439,27 +649,27 @@ function HugeSlides(link, options) {
         }
     }
 
-    function zoomIn(curImg, i) {
-        var curImgW, curImgH;
-        curImg.width = curImgW = curImg.getAttribute('data-widthImg') || 300;
-        curImg.height = curImgH = curImg.getAttribute('data-heightImg') || 500;
-        curImg.setAttribute('data-zoomed', '1');
+    /*    function zoomIn(curImg, i) {
+     var curImgW, curImgH;
+     curImg.width = curImgW = curImg.getAttribute('data-widthImg') || 300;
+     curImg.height = curImgH = curImg.getAttribute('data-heightImg') || 500;
+     curImg.setAttribute('data-zoomed', '1');
 
-        position = curImgW;
-        position2 = curImgH;
+     position = curImgW;
+     position2 = curImgH;
 
-        if (browser.touch) {
-            curImg.style.backgroundImage = 'url(' + newComicsLinks[i] + ')';
-            curImg.style.position = 'absolute';
-        } else {
-            curImg.getContext("2d").clearRect(0, 0, curImgW, curImgH);
-            if (allDOMImgComics[i]) {
-                curImg.getContext("2d").drawImage(allDOMImgComics[i], 0, 0, curImgW, curImgH);
-            }
-        }
-        curImg.style.top = '0';
-        curImg.style.left = ($(window).width() - curImgW) / 2 + 'px';
-    }
+     if (browser.touch) {
+     curImg.style.backgroundImage = 'url(' + newComicsLinks[i] + ')';
+     curImg.style.position = 'absolute';
+     } else {
+     curImg.getContext("2d").clearRect(0, 0, curImgW, curImgH);
+     if (allDOMImgComics[i]) {
+     curImg.getContext("2d").drawImage(allDOMImgComics[i], 0, 0, curImgW, curImgH);
+     }
+     }
+     curImg.style.top = '0';
+     curImg.style.left = ($(window).width() - curImgW) / 2 + 'px';
+     }*/
 
     function zoomOut(curImg, i) {
         var curImgW, curImgH, smallSize;
