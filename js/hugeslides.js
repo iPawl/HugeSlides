@@ -179,6 +179,14 @@ function HugeSlides(link, options) {
             nextSlide.preload();
         },
 
+        addStartDrag: function () {
+            var _this = this;
+            var onStartDrag = function (e) {
+                _this.startDrag.call(_this, e)
+            };
+            elem.addEventListener('touchstart', onStartDrag, false);
+            return onStartDrag;
+        },
 
         setStartDrag: function (add) {
             var _this = this;
@@ -352,9 +360,9 @@ function HugeSlides(link, options) {
                     this.zoomIn();
                     //this.setStartDrag(true);
 
-                    this.canvas.addEventListener('touchstart', function(e){
-                                   console.log(arguments.callee);
-                        this.removeEventListener('touchstart', arguments.callee, false);
+                    this.canvas.addEventListener('touchstart', function (e) {
+                        // console.log(arguments.callee);
+                        //this.removeEventListener('touchstart', arguments.callee, false);
                     }, false);
 
                     Slide.prototype.zoomed = true;              // пошло зумирование
@@ -365,31 +373,28 @@ function HugeSlides(link, options) {
                 clearInterval(scroll2);
 
 
-/*                while (i--) {
-                    el = slidesList[i];
-                    if (Slide.prototype.zoomed) {
-                        el.zoomIn();
-                    } else {
-                        // zoomOut(el, i);        // TODO СЕГОДНЯ!!!
-                    }
-                    if (zoom && currentIndex >= 0 && i === currentIndex) {
-                        if (browser.touch) {
-                            el.addEventListener('touchstart', startDrag, false);
-                        } else {
+                /*                while (i--) {
+                 el = slidesList[i];
+                 if (Slide.prototype.zoomed) {
+                 el.zoomIn();
+                 } else {
+                 // zoomOut(el, i);        // TODO СЕГОДНЯ!!!
+                 }
+                 if (zoom && currentIndex >= 0 && i === currentIndex) {
+                 if (browser.touch) {
+                 el.addEventListener('touchstart', startDrag, false);
+                 } else {
 
-                            el.onmousedown = startDrag;
-                        }
-                    } else {
-                        if (browser.touch) {
-                            el.removeEventListener('touchstart', startDrag, false);
-                        } else {
-                            el.onmousedown = null;
-                        }
-                    }
-                }*/
-
-
-
+                 el.onmousedown = startDrag;
+                 }
+                 } else {
+                 if (browser.touch) {
+                 el.removeEventListener('touchstart', startDrag, false);
+                 } else {
+                 el.onmousedown = null;
+                 }
+                 }
+                 }*/
 
 
                 /*                if (zoom) {
