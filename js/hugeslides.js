@@ -342,15 +342,21 @@ function HugeSlides(link, options) {
                 this.lastTouch = null;
 
                 // TODO может имеет смысл сделать это отдельным методом
-                var el, i = Slide.prototype.slidesLength;
+                var _this = this, el, i = Slide.prototype.slidesLength;
                 if (this.zoomed) {
                     //this.zoomOut();           // TODO СЕГОДНЯ!!!
-                    this.setStartDrag(false);
+                    //this.setStartDrag(false);
                     Slide.prototype.zoomed = false;
                     addTouchListeners();
                 } else {
                     this.zoomIn();
-                    this.setStartDrag(true);
+                    //this.setStartDrag(true);
+
+                    this.canvas.addEventListener('touchstart', function(e){
+                                   console.log(arguments.callee);
+                        this.removeEventListener('touchstart', arguments.callee, false);
+                    }, false);
+
                     Slide.prototype.zoomed = true;              // пошло зумирование
                     removeTouchListeners();                     // удаляем тач слушатели с общего контейнера
                 }
