@@ -113,13 +113,14 @@ function HugeSlides(link, options) {
 
         zoomed: false,                                           // false - состояние без зума
         slidesLength: 0,                                         // количество всех слайдов
-        //slidesLoaded: false,                                     // если все картинки слайдов будут загруженны, то станет true
+        //slidesLoaded: false,                                     // если все картинки слайдов будут загруженны, то станет true  // TODO флажок загрузки
+        //prevSlideIndex: undefined,
 
         setNewSize: function () {  // canvas resize
             if (browser.touch) {
                 this.canvas.width = win.width();
                 this.canvas.height = win.height();
-                this.canvas.style.top = '0px';
+                this.canvas.style.top = '0px';  //  TODO быть может повторяется или преренести в CSS
             } else {
                 var x = (win.height() - 130 - 20) / this.imgHeight,
                     wx = this.imgWidth * x,
@@ -129,14 +130,15 @@ function HugeSlides(link, options) {
             }
         },
 
-        fill: function () {  // перерисовка изображения в canvas
+        fill: function () {
             if (this.zoomed) {
                 this.canvas.style.position = 'absolute';
                 this.canvas.style.top = '0';
                 this.canvas.style.left = (win.width() - this.imgWidth) / 2 + 'px';
-                this.canvas.width =  this.imgWidth;
-                this.canvas.height =  this.imgHeight;
+                this.canvas.width = this.imgWidth;
+                this.canvas.height = this.imgHeight;
             } else {
+                this.setNewSize();
                 this.canvas.style.position = 'relative';
                 this.canvas.style.left = 0;
                 this.canvas.style.top = 0;
@@ -144,12 +146,10 @@ function HugeSlides(link, options) {
             if (browser.touch) {
                 this.canvas.style.backgroundImage = 'url(' + this.imgLink + ')'; // mobile
             } else {
-                // desktop
-                if (this.zoomed) {     // TODO упростить
+                if (this.zoomed) {     // TODO упростить  до this.canvas.getContext("2d").drawImage(this.img, 0, 0, this.canvas.width, this.canvas.height);
                     this.canvas.getContext("2d").drawImage(this.img, 0, 0, this.imgWidth, this.imgHeight);  // по размеру без зумирования
                 } else {
-                    this.setNewSize();
-                    this.canvas.getContext("2d").drawImage(this.img, 0, 0, this.canvas.width, this.canvas.height);  // по значению на canvas //TODO быть может неправильно считывать canvas.width canvas.height, придумать альтернативу
+                    this.canvas.getContext("2d").drawImage(this.img, 0, 0, this.canvas.width, this.canvas.height);
                 }
             }
         },
@@ -158,12 +158,8 @@ function HugeSlides(link, options) {
             this.imgWidth = this.img.width;
             this.imgHeight = this.img.height;
             this.divSlide.className = 'imagesComicsItem';
-            if (this.zoomed) {
-
-            }
             this.fill();
             this.imgLoaded = true;
-            console.log(' bang loaded', this.img);
         },
 
         preload: function (i) {   // предзагрузка картинки по индексу или объекту слайда
@@ -186,152 +182,8 @@ function HugeSlides(link, options) {
             var nextIndex = curIndex + 1;
             if (nextIndex >= this.slidesLength) return false;
             var nextSlide = slidesList[nextIndex];
-            if (nextSlide.imgLoaded) return false;                                       // если картинка загруженна или в кеше
+            if (nextSlide.imgLoaded) return false;                                       // если картинка загруженна или в кеше  // TODO проверить
             nextSlide.preload();
-        },
-
-        addStartDrag: function () {
-            var _this = this;
-            var onStartDrag = function (e) {
-                _this.startDrag.call(_this, e)
-            };
-            if (browser.touch) {
-                this.canvas.addEventListener('touchstart', onStartDrag, false);
-            } else {
-                this.onmousedown = onStartDrag;
-            }
-            return onStartDrag;
-        },
-
-        removeStartDrag: function () {
-            if (browser.touch) {
-                this.canvas.removeEventListener('touchstart', this.handler, false);
-            } else {
-                this.onmousedown = null;
-            }
-        },
-
-        startDrag: function (e) {
-            //var testEl = allImagesComics[index],
-            var testEl = this.canvas,
-                pos = [testEl.offsetLeft, testEl.offsetTop],
-                origin = getCoors(e).left,
-                origin2 = getCoors(e).top,
-                originTime = new Date().getTime(),
-                step = 40,	// in milliseconds
-                elWidth = testEl.width,
-                elHeight = testEl.height,
-                startPos,
-                speed,
-                distance = 0,
-            // min = -elWidth / 2,
-                min = -position + $(window).width() / 2,
-            //max = $(window).width() - elWidth / 2,
-                max = $(window).width() / 2,
-
-                startPos2,
-                speed2,
-                distance2 = 0,
-            // min2 = -elHeight / 2,
-            // max2 = $(window).height() / 2;
-                min2 = -position2 + $(window).height() / 2,
-                max2 = $(window).height() / 2;
-
-            clearInterval(scroll);
-            clearInterval(scroll2);
-
-            if (browser.touch) {
-                testEl.addEventListener('touchmove', moveDrag, false);
-                testEl.addEventListener('touchend', endDrag, false);
-            } else {
-                testEl.onmousemove = moveDrag;
-                document.onmouseup = endDrag;
-            }
-
-            function endDrag(e) {
-                var end = getCoors(e).left,
-                    end2 = getCoors(e).top,
-                    endTime = new Date().getTime(),
-                    dist = end - origin,
-                    dist2 = end2 - origin2,
-                    time = endTime - originTime;
-
-                startPos = testEl.offsetLeft;
-                startPos2 = testEl.offsetTop;
-
-                speed = dist / (time / 1000); // pixels per second
-                speed2 = dist2 / (time / 1000); // pixels per second
-
-                //'Speed is ' + Math.abs(Math.round(speed)) + ' pixels per second!';
-                scroll = setInterval(extraScroll, step);
-                scroll2 = setInterval(extraScroll2, step);
-
-                if (browser.touch) {
-                    testEl.removeEventListener('touchend', endDrag, false);
-                    testEl.removeEventListener('touchmove', moveDrag, false);
-                } else {
-                    testEl.onmousemove = document.onmouseup = null;
-                }
-            }
-
-            return false; // cancels scrolling
-
-            function extraScroll() {
-                distance += Math.round(speed * (step / 1000));
-                var newPos = startPos + distance;
-                if (newPos > max || newPos < min) {
-                    clearInterval(scroll);
-                    return;
-                }
-                testEl.style.left = newPos + 'px';
-                speed *= .85;
-                if (Math.abs(speed) < 10) {
-                    speed = 0;
-                    clearInterval(scroll);
-                }
-            }
-
-            function extraScroll2() {
-                distance2 += Math.round(speed2 * (step / 1000));
-                var newPos2 = startPos2 + distance2;
-                if (newPos2 > max2 || newPos2 < min2) {
-                    clearInterval(scroll2);
-                    return;
-                }
-                testEl.style.top = newPos2 + 'px';
-                speed2 *= .85;
-                if (Math.abs(speed2) < 10) {
-                    speed2 = 0;
-                    clearInterval(scroll2);
-                }
-            }
-
-            function moveDrag(e) {
-                var currentPos = getCoors(e).left,
-                    currentPos2 = getCoors(e).top,
-                    newPos = (currentPos - origin) + pos[0],
-                    newPos2 = (currentPos2 - origin2) + pos[1];
-
-                if (newPos <= max && newPos >= min) {
-                    testEl.style.left = newPos + 'px';
-                }
-                if (newPos2 <= max2 && newPos2 >= min2) {
-                    testEl.style.top = newPos2 + 'px';
-                }
-            }
-
-            function getCoors(e) {
-                var left, top;
-                if (e.changedTouches) {// iPhone
-                    left = e.changedTouches[0].clientX;
-                    top = e.changedTouches[0].clientY;
-                } else {
-                    // all others
-                    left = e.clientX;
-                    top = e.clientY;
-                }
-                return {left: left, top: top};
-            }
         },
 
         setDoubleTap: function () {
@@ -349,7 +201,9 @@ function HugeSlides(link, options) {
                 delta = now - lastTouch;
             if (delta < delay && 0 < delta) {
                 this.lastTouch = null;
-                this.zoomDragToggle();
+                console.log('double index', index)
+                setOrRemoveDragHandlers(index, true);
+
             } else {
                 this.lastTouch = now;
             }
@@ -364,46 +218,7 @@ function HugeSlides(link, options) {
 
         zoomOut: function () {
             Slide.prototype.zoomed = false;
-            if (browser.touch) {
-                this.setNewSize();
-                this.canvas.style.backgroundImage = 'url(' + this.imgLink + ')';
-            } else {
-                this.fill();
-            }
-            this.canvas.style.position = 'relative';
-            this.canvas.style.left = 0;
-            this.canvas.style.top = 0;
-        },
-
-        zoomDragToggle: function () {
-            var el, i = Slide.prototype.slidesLength;
-            if (this.zoomed) {
-                this.zoomOut();
-                this.removeStartDrag();
-                Slide.prototype.zoomed = false;
-                addTouchListeners();
-                while (i--) {
-                    el = slidesList[i];
-                    if (el !== this) {
-                        el.zoomOut();
-                        el.removeStartDrag();
-                    }
-                }
-            } else {
-                this.zoomIn();
-                this.handler = this.addStartDrag();
-                Slide.prototype.zoomed = true;              // пошло зумирование
-                removeTouchListeners();                     // удаляем тач слушатели с общего контейнера
-                while (i--) {
-                    el = slidesList[i];
-                    if (el !== this) {
-                        el.zoomIn();
-                    }
-                }
-            }
-            console.log('this.zoomed ', this.zoomed);
-            clearInterval(scroll);
-            clearInterval(scroll2);
+            this.fill();
         }
     };
 
@@ -423,61 +238,13 @@ function HugeSlides(link, options) {
             content.appendChild(slideObj.divSlide);                                                         // собираем все контейнеры слайдов для вставки в DOM
         }
     }
-    //console.log(slidesList);
+
     element.appendChild(content);                                           // вставляем контейнеры слайдов в DOM
-
-    //var newComicsLinksLength = newComicsLinks.length;     // TODO DELETE
     totalPagesInfoComics.text(Slide.prototype.slidesLength);                // прорисовка общего количества слайдов
-
-    /*    // создаем слайды с картинками
-     for (var i = 0, canvas, div; i < newComicsLinksLength; i++) {
-     cSize = getNewSize(500, 500);
-     canvas = document.createElement("canvas");
-     canvas.width = cSize.w;
-     canvas.height = cSize.h;
-     canvas.top = "130px";
-     canvas.addEventListener('touchend', doubleTap, false);
-     div = document.createElement("div");
-     div.className = "imagesComicsItem loadImg";
-     div.appendChild(canvas);
-     content.appendChild(div);
-
-     allImagesComics.push(canvas);
-     }
-
-     //добавляем слайды в основной контейнер
-     element.appendChild(content);*/
-
-
-    /*    function doubleTap(e) {
-     var delay = 300;
-     var now = new Date().getTime();
-
-     // the first time this will make delta a negative number
-     var lastTouch = $(this).data('lastTouch') || now + 1;
-     var delta = now - lastTouch;
-     if (delta < delay && 0 < delta) {
-     // After we detct a doubletap, start over
-     $(this).data('lastTouch', null);
-
-     if (zoom) {
-     zoom = false;
-     setOrRemoveDragHandlers(-1);
-     } else {
-     zoom = true;
-     setOrRemoveDragHandlers(index);
-     }
-
-     } else {
-     $(this).data('lastTouch', now);
-     }
-     }*/
-
     var position = 500, position2 = 500;
 
-    // перетаскивание картинки
-    function startDrag(e) {
-        var testEl = allImagesComics[index],
+    function startDrag(e) {                     // перетаскивание картинки
+        var testEl = slidesList[index].canvas,
 
             pos = [testEl.offsetLeft, testEl.offsetTop],
             origin = getCoors(e).left,
@@ -586,10 +353,15 @@ function HugeSlides(link, options) {
         }
 
         function getCoors(e) {
-            var left, top;
+            var left, top, touches;
             if (e.changedTouches) {// iPhone
-                left = e.changedTouches[0].clientX;
-                top = e.changedTouches[0].clientY;
+               // left = e.changedTouches[0].clientX;
+               // top = e.changedTouches[0].clientY;
+                //touches  = e.touches[0];
+               // left = touches.pageX;
+               // top =  touches.pageY;
+                console.log(e.touches[0]);
+                console.log('IPHONE', e.changedTouches[0]);
             } else {
                 // all others
                 left = e.clientX;
@@ -600,191 +372,61 @@ function HugeSlides(link, options) {
     }
 
     // запуск/остановка перетаскивания картинки
-    function setOrRemoveDragHandlers(currentIndex) {
-        if (Slide.prototype.zoomed) {
-            removeTouchListeners();        // удаляем тач слушатели с общего контейнера
-        } else {
-            addTouchListeners();
-        }
-
+    function setOrRemoveDragHandlers(currentIndex, toggle) {
         clearInterval(scroll);
         clearInterval(scroll2);
 
         var el, i = Slide.prototype.slidesLength;
-        while (i--) {
-            el = slidesList[i];
+        if (toggle) {                                       // переключатель зума с драгом
             if (Slide.prototype.zoomed) {
-                el.zoomIn();
-            } else {
-                // zoomOut(el, i);
-            }
-            if (zoom && currentIndex >= 0 && i === currentIndex) {
-                if (browser.touch) {
-                    el.addEventListener('touchstart', startDrag, false);
-                } else {
-
-                    el.onmousedown = startDrag;
+                addTouchListeners();
+                while (i--) {
+                    el = slidesList[i];
+                    el.zoomOut();
+                    if (browser.touch) {
+                        el.canvas.removeEventListener('touchstart', startDrag, false);
+                    } else {
+                        el.canvas.onmousedown = null;
+                    }
                 }
             } else {
-                if (browser.touch) {
-                    el.removeEventListener('touchstart', startDrag, false);
-                } else {
-                    el.onmousedown = null;
+                removeTouchListeners();
+                while (i--) {
+                    el = slidesList[i];
+                    el.zoomIn();
+                    if (i === currentIndex) {
+                        if (browser.touch) {
+                            el.canvas.addEventListener('touchstart', startDrag, false);
+                        } else {
+                            el.canvas.onmousedown = startDrag;
+                        }
+                    }
                 }
             }
-        }
-    }
-
-    /*    function zoomIn(curImg, i) {
-     var curImgW, curImgH;
-     curImg.width = curImgW = curImg.getAttribute('data-widthImg') || 300;
-     curImg.height = curImgH = curImg.getAttribute('data-heightImg') || 500;
-     curImg.setAttribute('data-zoomed', '1');
-
-     position = curImgW;
-     position2 = curImgH;
-
-     if (browser.touch) {
-     curImg.style.backgroundImage = 'url(' + newComicsLinks[i] + ')';
-     curImg.style.position = 'absolute';
-     } else {
-     curImg.getContext("2d").clearRect(0, 0, curImgW, curImgH);
-     if (allDOMImgComics[i]) {
-     curImg.getContext("2d").drawImage(allDOMImgComics[i], 0, 0, curImgW, curImgH);
-     }
-     }
-     curImg.style.top = '0';
-     curImg.style.left = ($(window).width() - curImgW) / 2 + 'px';
-     }*/
-
-    function zoomOut(curImg, i) {
-        var curImgW, curImgH, smallSize;
-        curImgW = curImg.getAttribute('data-widthImg') || 300;
-        curImgH = curImg.getAttribute('data-heightImg') || 500;
-        curImg.setAttribute('data-zoomed', '0');
-
-
-        if (browser.touch) {
-            resizeCanvas(curImg);
-            curImg.style.backgroundImage = 'url(' + newComicsLinks[i] + ')';
-            curImg.style.position = 'relative';
-            curImg.style.left = 0;
-            curImg.style.top = 0;
         } else {
-            smallSize = getNewSize(curImgW, curImgH);
-            curImg.width = smallSize.w;
-            curImg.height = smallSize.h;
-            centering(curImg, smallSize);
-            curImg.getContext("2d").clearRect(0, 0, smallSize.w, smallSize.h);
-            if (allDOMImgComics[i]) {
-                curImg.getContext("2d").drawImage(allDOMImgComics[i], 0, 0, smallSize.w, smallSize.h);
+            if (Slide.prototype.zoomed) {
+                while (i--) {
+                    el = slidesList[i];
+                    if (i === currentIndex) {
+                        if (browser.touch) {
+                            el.canvas.addEventListener('touchstart', startDrag, false);
+                        } else {
+                            el.canvas.onmousedown = startDrag;
+                        }
+                    } else {
+                        if (browser.touch) {
+                            el.canvas.removeEventListener('touchstart', startDrag, false);
+                        } else {
+                            el.canvas.onmousedown = null;
+                        }
+                    }
+                }
             }
         }
     }
-
-    function resizeCanvas(c) {
-        var w = $(window),
-            wW = w.width(),
-            wH = w.height();
-        c.width = wW;
-        c.height = wH;
-    }
-
-    /*    function responsive() {
-     var el, i = Slide.prototype.slidesLength;
-     while (i--) {
-     el = allImagesComics[i];
-     if (browser.touch) {
-     el.style.position = 'relative';
-     el.style.left = 0;
-     el.style.top = 0;
-     resizeCanvas(el);
-     }
-     }
-     }*/
-
-    function getNewSize(w, h) {
-        var x = (win.height() - 130 - 20) / h,
-            wx = w * x,
-            hx = h * x; // высота холста просмотра превьюшек
-        return {w: wx, h: hx};
-    }
-
-    function centering(canvasEl, size) {
-        if (browser.touch) return;
-        canvasEl.style.position = 'absolute';
-        canvasEl.style.left = win.width() / 2 - size.w / 2 + 'px';
-        canvasEl.style.top = 130 + 'px';
-    }
-
-    // preload img
-    /*function preload(url, index) {
-     if (index + 1 > newComicsLinksLength) {
-     return false;
-     }
-
-     var canvasEl = allImagesComics[index],
-     c = canvasEl.getContext("2d");
-     var $img = $("<img />"),
-     img = $img[0];
-
-     img.src = newComicsLinks[index];
-
-     $img.one('load',function () {
-     if (index + 1 > newComicsLinksLength) {
-     return false;
-     }
-     imageCounter++;
-     var t = this,
-     w = t.width,
-     h = t.height,
-     size = getNewSize(w, h);
-
-     canvasEl.parentNode.className = 'imagesComicsItem';
-     canvasEl.setAttribute('data-widthImg', w);
-     canvasEl.setAttribute('data-heightImg', h);
-
-     if (zoom) {
-     centering(canvasEl, {w: w, h: h});
-     } else {
-     centering(canvasEl, size);
-     }
-
-     if (canvasEl.getAttribute('data-zoomed') === '1') {
-     canvasEl.width = w;
-     canvasEl.height = h;
-     c.drawImage(t, 0, 0, w, h);
-
-     } else {
-     if (browser.touch) {
-     canvasEl.style.backgroundImage = 'url(' + newComicsLinks[index] + ')';
-     } else {
-     canvasEl.width = size.w;
-     canvasEl.height = size.h;
-     c.drawImage(t, 0, 0, size.w, size.h);
-     }
-     }
-
-     allDOMImgComics[index] = t;
-
-     }).each(function () {
-     if (this.complete) $(this).load();
-     });
-
-     img.src = newComicsLinks[index];
-
-     }*/
-
-    /*    function preloadNext(curIndex) {
-     var nextIndex = curIndex + 1;
-     if (nextIndex >= length) {
-     return false;
-     }
-     preload(newComicsLinks[nextIndex], nextIndex);
-     }*/
 
     function setup() {
-        console.log('setup');
+
         // cache slides
         slides = element.children;
         length = slides.length;
@@ -882,10 +524,9 @@ function HugeSlides(link, options) {
         }
 
         index = to;
-        //setOrRemoveDragHandlers(index);
-        // preloadNext(index);
-        offloadFn(Slide.prototype.preloadNext(index));
 
+        setOrRemoveDragHandlers(index, false);
+        offloadFn(Slide.prototype.preloadNext(index));
         currentSlideIndicator.text(index + 1);
 
         offloadFn(options.callback && options.callback(index, slides[index]));
@@ -1101,9 +742,9 @@ function HugeSlides(link, options) {
                         index = circle(index - 1);
                     }
 
-                    // preloadNext(index);
                     Slide.prototype.preloadNext(index);
                     currentSlideIndicator.text(index + 1);
+
                     options.callback && options.callback(index, slides[index]);
                 } else {
                     if (options.continuous) {
@@ -1170,7 +811,7 @@ function HugeSlides(link, options) {
 
     function show(e) {
         e.preventDefault();
-        setup();
+        //setup();         // TODO нужно ли?
         document.body.addEventListener('touchstart', stopScrolling, false);
         document.body.addEventListener('touchmove', stopScrolling, false);
         $(document.body).addClass('scrollHide');
