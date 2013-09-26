@@ -106,6 +106,7 @@ function HugeSlides(link, options) {
         this.imgLoaded = false;
         this.imgWidth = 500;
         this.imgHeight = 500;
+        this.handler = noop;
     }
 
     Slide.prototype = {
@@ -129,11 +130,22 @@ function HugeSlides(link, options) {
         },
 
         fill: function () {  // перерисовка изображения в canvas
+            if (this.zoomed) {
+                this.canvas.style.position = 'absolute';
+                this.canvas.style.top = '0';
+                this.canvas.style.left = (win.width() - this.imgWidth) / 2 + 'px';
+                this.canvas.width =  this.imgWidth;
+                this.canvas.height =  this.imgHeight;
+            } else {
+                this.canvas.style.position = 'relative';
+                this.canvas.style.left = 0;
+                this.canvas.style.top = 0;
+            }
             if (browser.touch) {
                 this.canvas.style.backgroundImage = 'url(' + this.imgLink + ')'; // mobile
             } else {
                 // desktop
-                if (this.zoomed) {
+                if (this.zoomed) {     // TODO упростить
                     this.canvas.getContext("2d").drawImage(this.img, 0, 0, this.imgWidth, this.imgHeight);  // по размеру без зумирования
                 } else {
                     this.setNewSize();
@@ -146,10 +158,9 @@ function HugeSlides(link, options) {
             this.imgWidth = this.img.width;
             this.imgHeight = this.img.height;
             this.divSlide.className = 'imagesComicsItem';
-            /*            if (this.zoomed) { // TODO тут наверно нужна центрация + зумирует при первой загрузке
-             this.canvas.width = this.imgWidth;
-             this.canvas.height = this.imgHeight;
-             }*/
+            if (this.zoomed) {
+
+            }
             this.fill();
             this.imgLoaded = true;
             console.log(' bang loaded', this.img);
@@ -184,29 +195,19 @@ function HugeSlides(link, options) {
             var onStartDrag = function (e) {
                 _this.startDrag.call(_this, e)
             };
-            elem.addEventListener('touchstart', onStartDrag, false);
+            if (browser.touch) {
+                this.canvas.addEventListener('touchstart', onStartDrag, false);
+            } else {
+                this.onmousedown = onStartDrag;
+            }
             return onStartDrag;
         },
 
-        setStartDrag: function (add) {
-            var _this = this;
-
-            function onStartDrag(e) {
-                _this.startDrag.call(_this, e)
-            }
-
-            if (add) {
-                if (browser.touch) {
-                    this.canvas.addEventListener('touchstart', onStartDrag, false);
-                } else {
-                    //el.onmousedown = startDrag;      //TODO ДЛЯ КОМПА доработать!
-                }
+        removeStartDrag: function () {
+            if (browser.touch) {
+                this.canvas.removeEventListener('touchstart', this.handler, false);
             } else {
-                if (browser.touch) {
-                    this.canvas.removeEventListener('touchstart', onStartDrag, false);
-                } else {
-                    // el.onmousedown = null;    //TODO ДЛЯ КОМПА доработать!
-                }
+                this.onmousedown = null;
             }
         },
 
@@ -348,88 +349,62 @@ function HugeSlides(link, options) {
                 delta = now - lastTouch;
             if (delta < delay && 0 < delta) {
                 this.lastTouch = null;
-
-                // TODO может имеет смысл сделать это отдельным методом
-                var _this = this, el, i = Slide.prototype.slidesLength;
-                if (this.zoomed) {
-                    //this.zoomOut();           // TODO СЕГОДНЯ!!!
-                    //this.setStartDrag(false);
-                    Slide.prototype.zoomed = false;
-                    addTouchListeners();
-                } else {
-                    this.zoomIn();
-                    //this.setStartDrag(true);
-
-                    this.canvas.addEventListener('touchstart', function (e) {
-                        // console.log(arguments.callee);
-                        //this.removeEventListener('touchstart', arguments.callee, false);
-                    }, false);
-
-                    Slide.prototype.zoomed = true;              // пошло зумирование
-                    removeTouchListeners();                     // удаляем тач слушатели с общего контейнера
-                }
-                console.log('this.zoomed ', this.zoomed);
-                clearInterval(scroll);
-                clearInterval(scroll2);
-
-
-                /*                while (i--) {
-                 el = slidesList[i];
-                 if (Slide.prototype.zoomed) {
-                 el.zoomIn();
-                 } else {
-                 // zoomOut(el, i);        // TODO СЕГОДНЯ!!!
-                 }
-                 if (zoom && currentIndex >= 0 && i === currentIndex) {
-                 if (browser.touch) {
-                 el.addEventListener('touchstart', startDrag, false);
-                 } else {
-
-                 el.onmousedown = startDrag;
-                 }
-                 } else {
-                 if (browser.touch) {
-                 el.removeEventListener('touchstart', startDrag, false);
-                 } else {
-                 el.onmousedown = null;
-                 }
-                 }
-                 }*/
-
-
-                /*                if (zoom) {
-                 zoom = false;
-                 setOrRemoveDragHandlers(-1);
-                 } else {
-                 zoom = true;
-                 setOrRemoveDragHandlers(index);
-                 }*/
-
+                this.zoomDragToggle();
             } else {
                 this.lastTouch = now;
             }
         },
 
         zoomIn: function () {
-            var curImgW, curImgH;
-            this.canvas.width = curImgW = this.imgWidth || 300;
-            this.canvas.height = curImgH = this.imgHeight || 500;
             Slide.prototype.zoomed = true;
+            this.fill();
+            position = this.imgWidth;    // TODO потом запихнуть в конструктор
+            position2 = this.imgHeight;
+        },
 
-            position = curImgW;
-            position2 = curImgH;
-
-            if (browser.touch) {                                              //TODO скорее всего такая функция уже есть
-                this.canvas.style.backgroundImage = 'url(' + this.imgLink + ')';   // TODO уточнить, не используется ли повторная заливка
-                this.canvas.style.position = 'absolute';
+        zoomOut: function () {
+            Slide.prototype.zoomed = false;
+            if (browser.touch) {
+                this.setNewSize();
+                this.canvas.style.backgroundImage = 'url(' + this.imgLink + ')';
             } else {
-                this.canvas.getContext("2d").clearRect(0, 0, curImgW, curImgH);   //TODO  clearRect вообще нужно???
-                this.canvas.getContext("2d").drawImage(this.img, 0, 0, curImgW, curImgH);
+                this.fill();
             }
-            this.canvas.style.top = '0';
-            this.canvas.style.left = (win.width() - curImgW) / 2 + 'px';
-        }
+            this.canvas.style.position = 'relative';
+            this.canvas.style.left = 0;
+            this.canvas.style.top = 0;
+        },
 
+        zoomDragToggle: function () {
+            var el, i = Slide.prototype.slidesLength;
+            if (this.zoomed) {
+                this.zoomOut();
+                this.removeStartDrag();
+                Slide.prototype.zoomed = false;
+                addTouchListeners();
+                while (i--) {
+                    el = slidesList[i];
+                    if (el !== this) {
+                        el.zoomOut();
+                        el.removeStartDrag();
+                    }
+                }
+            } else {
+                this.zoomIn();
+                this.handler = this.addStartDrag();
+                Slide.prototype.zoomed = true;              // пошло зумирование
+                removeTouchListeners();                     // удаляем тач слушатели с общего контейнера
+                while (i--) {
+                    el = slidesList[i];
+                    if (el !== this) {
+                        el.zoomIn();
+                    }
+                }
+            }
+            console.log('this.zoomed ', this.zoomed);
+            clearInterval(scroll);
+            clearInterval(scroll2);
+        }
     };
 
     /*****************************
