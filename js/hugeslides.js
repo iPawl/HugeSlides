@@ -131,12 +131,18 @@ function HugeSlides(link, options) {
         },
 
         fill: function () {
+            var winW = win.width();
             if (this.zoomed) {
                 this.canvas.style.position = 'absolute';
                 this.canvas.style.top = '0';
-                this.canvas.style.left = (win.width() - this.imgWidth) / 2 + 'px';
-                this.canvas.width = this.imgWidth;
-                this.canvas.height = this.imgHeight;
+                if (winW < 500) {  //  для мобильных экранов
+                    this.canvas.width = this.imgWidth * 0.5;
+                    this.canvas.height = this.imgHeight * 0.5;
+                } else {
+                    this.canvas.width = this.imgWidth;
+                    this.canvas.height = this.imgHeight;
+                }
+                this.canvas.style.left = (winW - this.canvas.width) / 2 + 'px';
             } else {
                 this.setNewSize();
                 this.canvas.style.position = 'relative';
@@ -195,13 +201,13 @@ function HugeSlides(link, options) {
         },
 
         doubleTap: function (e) {
-            var delay = 300,
+            var delay = 200,
                 now = new Date().getTime(),
                 lastTouch = this.lastTouch || now + 1,
                 delta = now - lastTouch;
             if (delta < delay && 0 < delta) {
                 this.lastTouch = null;
-                console.log('double index', index)
+                //console.log('double index', index)
                 setOrRemoveDragHandlers(index, true);
 
             } else {
@@ -353,15 +359,20 @@ function HugeSlides(link, options) {
         }
 
         function getCoors(e) {
-            var left, top, touches;
+            var left, top, touches, changedTouches;
             if (e.changedTouches) {// iPhone
-               // left = e.changedTouches[0].clientX;
-               // top = e.changedTouches[0].clientY;
-                //touches  = e.touches[0];
-               // left = touches.pageX;
-               // top =  touches.pageY;
-                console.log(e.touches[0]);
-                console.log('IPHONE', e.changedTouches[0]);
+                // left = e.changedTouches[0].clientX;
+                // top = e.changedTouches[0].clientY;
+                touches = e.touches[0];
+                changedTouches = e.changedTouches[0];
+                if (touches) {
+                    left = touches.pageX;
+                    top = touches.pageY;
+                } else {
+                    left = changedTouches.pageX;
+                    top = changedTouches.pageY;
+                }
+;
             } else {
                 // all others
                 left = e.clientX;
@@ -427,6 +438,7 @@ function HugeSlides(link, options) {
 
     function setup() {
 
+
         // cache slides
         slides = element.children;
         length = slides.length;
@@ -448,7 +460,7 @@ function HugeSlides(link, options) {
         width = container.getBoundingClientRect().width || container.offsetWidth;
 
         element.style.width = (slides.length * width) + 'px';
-        console.log((slides.length * width) + 'px');
+        //console.log((slides.length * width) + 'px');
         // stack elements
         var pos = slides.length;
         while (pos--) {
@@ -462,6 +474,11 @@ function HugeSlides(link, options) {
                 slide.style.left = (pos * -width) + 'px';
                 move(pos, index > pos ? -width : (index < pos ? width : 0), 0);
             }
+        }
+
+        if (Slide.prototype.slidesLength !== 0) {                               // предзагрузка стартовых картинок слайдов   // TODO подумать над этим, iPhone bug
+            slidesList[0].preload();
+            if (Slide.prototype.slidesLength > 1) slidesList[1].preload();
         }
 
         // reposition elements before and after index
@@ -774,10 +791,7 @@ function HugeSlides(link, options) {
     // trigger setup
     setup();
 
-    if (Slide.prototype.slidesLength !== 0) {                               // предзагрузка стартовых картинок слайдов
-        slidesList[0].preload();
-        if (Slide.prototype.slidesLength > 1) slidesList[1].preload();
-    }
+
     // start auto slideshow if applicable
     if (delay) begin();
 
@@ -809,6 +823,11 @@ function HugeSlides(link, options) {
         element.removeEventListener('touchend', events, false);
     }
 
+    if (Slide.prototype.slidesLength !== 0) {                               // предзагрузка стартовых картинок слайдов   // TODO подумать над этим, iPhone bug
+        slidesList[0].fill();
+        if (Slide.prototype.slidesLength > 1) slidesList[1].fill();
+    }
+
     function show(e) {
         e.preventDefault();
         //setup();         // TODO нужно ли?
@@ -818,8 +837,21 @@ function HugeSlides(link, options) {
         blackoutComics.fadeIn(100);
         bodyComics.fadeIn(800, function () {
             setup();
-            //responsive();
+           // setTimeout(function() {
+
+                setOrRemoveDragHandlers(0, true);
+                setOrRemoveDragHandlers(0, true);
+           // }, 1000);
         });
+        //bodyComics[0].style.display = 'block';
+
+        //setup();
+
+
+
+/*        bodyComics.show(function () {
+            setup();
+        });*/
         return false;
     }
 
