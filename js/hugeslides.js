@@ -76,22 +76,19 @@ function HugeSlides(link, options) {
         .append(nextComics);
 
 
-    /*    if (!browser.touch) {
-     var zoomComics = $('<div class="zoomComics" data-zoom="in"><div class="zoomComics_in"></div></div>');
-     bodyComics.append(zoomComics);
-     zoomComics.click(function () {
-     var t = $(this);
-     if (zoom) {
-     zoom = false;
-     setOrRemoveDragHandlers(-1);
-     t.removeClass('zoomOut');
-     } else {
-     zoom = true;
-     setOrRemoveDragHandlers(index);
-     t.addClass('zoomOut');
-     }
-     });
-     }  // adaptive zoom button*/
+    if (!browser.touch) {
+        var zoomComics = $('<div class="zoomComics" data-zoom="in"><div class="zoomComics_in"></div></div>');
+        bodyComics.append(zoomComics);
+        zoomComics.click(function () {
+            var t = $(this);
+            setOrRemoveDragHandlers(index, true);
+            if (Slide.prototype.zoomed) {
+                t.addClass('zoomOut');
+            } else {
+                t.removeClass('zoomOut');
+            }
+        });
+    }  // adaptive zoom button
 
     $(document.body).append(blackoutComics).append(bodyComics);
 
@@ -153,9 +150,13 @@ function HugeSlides(link, options) {
                 this.canvas.style.backgroundImage = 'url(' + this.imgLink + ')'; // mobile
             } else {
                 if (this.zoomed) {     // TODO упростить  до this.canvas.getContext("2d").drawImage(this.img, 0, 0, this.canvas.width, this.canvas.height);
-                    this.canvas.getContext("2d").drawImage(this.img, 0, 0, this.imgWidth, this.imgHeight);  // по размеру без зумирования
+
+                    var lol =   this.canvas.getContext("2d");
+                    console.log(lol);
+                    //this.canvas.getContext("2d").drawImage(this.img, 0, 0, this.imgWidth, this.imgHeight);  // по размеру без зумирования
+                lol.drawImage(this.img, 0, 0, this.imgWidth, this.imgHeight);
                 } else {
-                    this.canvas.getContext("2d").drawImage(this.img, 0, 0, this.canvas.width, this.canvas.height);
+                   // this.canvas.getContext("2d").drawImage(this.img, 0, 0, this.canvas.width, this.canvas.height);
                 }
             }
         },
@@ -372,7 +373,7 @@ function HugeSlides(link, options) {
                     left = changedTouches.pageX;
                     top = changedTouches.pageY;
                 }
-;
+                ;
             } else {
                 // all others
                 left = e.clientX;
@@ -837,21 +838,20 @@ function HugeSlides(link, options) {
         blackoutComics.fadeIn(100);
         bodyComics.fadeIn(800, function () {
             setup();
-           // setTimeout(function() {
+            // setTimeout(function() {
 
-                setOrRemoveDragHandlers(0, true);
-                setOrRemoveDragHandlers(0, true);
-           // }, 1000);
+            setOrRemoveDragHandlers(0, true);
+            setOrRemoveDragHandlers(0, true);
+            // }, 1000);
         });
         //bodyComics[0].style.display = 'block';
 
         //setup();
 
 
-
-/*        bodyComics.show(function () {
-            setup();
-        });*/
+        /*        bodyComics.show(function () {
+         setup();
+         });*/
         return false;
     }
 
