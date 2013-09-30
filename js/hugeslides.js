@@ -146,7 +146,7 @@ function HugeSlides(link, options) {
                 this.setNewSize();
                 this.canvas.style.position = 'relative';
                 this.canvas.style.left = 0;
-                this.canvas.style.top = browser.touch?0:'130px';
+                this.canvas.style.top = browser.touch ? 0 : '130px';
             }
             if (browser.touch) {
                 this.canvas.style.backgroundImage = 'url(' + this.imgLink + ')'; // mobile
@@ -207,13 +207,13 @@ function HugeSlides(link, options) {
         },
 
         doubleTap: function (e) {
-            var delay = 200,
+            var delay = 250,
                 now = new Date().getTime(),
                 lastTouch = this.lastTouch || now + 1,
                 delta = now - lastTouch;
             if (delta < delay && 0 < delta) {
                 this.lastTouch = null;
-                //console.log('double index', index)
+                console.log('double index', index)
                 setOrRemoveDragHandlers(index, true);
 
             } else {
@@ -256,6 +256,9 @@ function HugeSlides(link, options) {
     var position = 500, position2 = 500;
 
     function startDrag(e) {                     // перетаскивание картинки
+        if (e.touches.length>1) {
+          return false;
+        }
         var testEl = slidesList[index].canvas,
 
             pos = [testEl.offsetLeft, testEl.offsetTop],
@@ -351,6 +354,15 @@ function HugeSlides(link, options) {
         }
 
         function moveDrag(e) {
+            if (e.touches.length>1) {
+                if (browser.touch) {
+                    testEl.removeEventListener('touchend', endDrag, false);
+                    testEl.removeEventListener('touchmove', moveDrag, false);
+                } else {
+                    testEl.onmousemove = document.onmouseup = null;
+                }
+                return false;
+            }
             var currentPos = getCoors(e).left,
                 currentPos2 = getCoors(e).top,
                 newPos = (currentPos - origin) + pos[0],
@@ -378,7 +390,6 @@ function HugeSlides(link, options) {
                     left = changedTouches.pageX;
                     top = changedTouches.pageY;
                 }
-                ;
             } else {
                 // all others
                 left = e.clientX;
@@ -828,11 +839,12 @@ function HugeSlides(link, options) {
         element.removeEventListener('touchmove', events, false);
         element.removeEventListener('touchend', events, false);
     }
-/*
-    if (Slide.prototype.slidesLength !== 0) {                               // предзагрузка стартовых картинок слайдов   // TODO подумать над этим, iPhone bug
-        slidesList[0].fill();
-        if (Slide.prototype.slidesLength > 1) slidesList[1].fill();
-    }*/
+
+    /*
+     if (Slide.prototype.slidesLength !== 0) {                               // предзагрузка стартовых картинок слайдов   // TODO подумать над этим, iPhone bug
+     slidesList[0].fill();
+     if (Slide.prototype.slidesLength > 1) slidesList[1].fill();
+     }*/
 
     function show(e) {
         e.preventDefault();
