@@ -5,7 +5,8 @@
  *
  * http://github.com/iPawl/HugeSlides
  */
-
+// TODO упростить снятие тач событий по индексу
+// TODO сделать предзагрузку без костылей, сейчас все слайды запускаются
 
 function HugeSlides(link, options) {
     "use strict";
@@ -128,10 +129,11 @@ function HugeSlides(link, options) {
         },
 
         fill: function () {
+
             var winW = win.width();
             if (this.zoomed) {
                 this.canvas.style.position = 'absolute';
-                this.canvas.style.top = '0';
+                this.canvas.style.top = 0;
                 if (winW < 500) {  //  для мобильных экранов
                     this.canvas.width = this.imgWidth * 0.5;
                     this.canvas.height = this.imgHeight * 0.5;
@@ -144,19 +146,22 @@ function HugeSlides(link, options) {
                 this.setNewSize();
                 this.canvas.style.position = 'relative';
                 this.canvas.style.left = 0;
-                this.canvas.style.top = 0;
+                this.canvas.style.top = browser.touch?0:'130px';
             }
             if (browser.touch) {
                 this.canvas.style.backgroundImage = 'url(' + this.imgLink + ')'; // mobile
             } else {
                 if (this.zoomed) {     // TODO упростить  до this.canvas.getContext("2d").drawImage(this.img, 0, 0, this.canvas.width, this.canvas.height);
+                    //console.log(this.imgLoaded);
+                    if (this.img.height > 0) {
+                        //console.log('fill ', this.canvas);
+                        this.canvas.getContext("2d").drawImage(this.img, 0, 0, this.imgWidth, this.imgHeight);  // по размеру без зумирования
+                    }
 
-                    var lol =   this.canvas.getContext("2d");
-                    console.log(lol);
-                    //this.canvas.getContext("2d").drawImage(this.img, 0, 0, this.imgWidth, this.imgHeight);  // по размеру без зумирования
-                lol.drawImage(this.img, 0, 0, this.imgWidth, this.imgHeight);
                 } else {
-                   // this.canvas.getContext("2d").drawImage(this.img, 0, 0, this.canvas.width, this.canvas.height);
+                    if (this.img.height > 0) {
+                        this.canvas.getContext("2d").drawImage(this.img, 0, 0, this.canvas.width, this.canvas.height);
+                    }
                 }
             }
         },
@@ -165,8 +170,8 @@ function HugeSlides(link, options) {
             this.imgWidth = this.img.width;
             this.imgHeight = this.img.height;
             this.divSlide.className = 'imagesComicsItem';
-            this.fill();
             this.imgLoaded = true;
+            this.fill();
         },
 
         preload: function (i) {   // предзагрузка картинки по индексу или объекту слайда
@@ -823,11 +828,11 @@ function HugeSlides(link, options) {
         element.removeEventListener('touchmove', events, false);
         element.removeEventListener('touchend', events, false);
     }
-
+/*
     if (Slide.prototype.slidesLength !== 0) {                               // предзагрузка стартовых картинок слайдов   // TODO подумать над этим, iPhone bug
         slidesList[0].fill();
         if (Slide.prototype.slidesLength > 1) slidesList[1].fill();
-    }
+    }*/
 
     function show(e) {
         e.preventDefault();
