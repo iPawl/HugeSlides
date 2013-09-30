@@ -1,5 +1,5 @@
 /*!
- * HugeSlides - with HugeSlides, quickly and easily view big pics and more.
+ * HugeSlides v.1.01 beta - with HugeSlides, quickly and easily view big pics and more.
  * (c) 2013 Pavel Fomichev
  * MIT Licensed.
  *
@@ -39,14 +39,8 @@ function HugeSlides(link, options) {
         length,
         index = parseInt(options.startSlide, 10) || 0,
         speed = options.speed || 300,
-
     // filter  img  URls
-        newComicsLinks = [],// TODO DELETE или заменить везде на slidesList , т.к. часто используется
-        allImagesComics = [],   // TODO DELETE
-        allDOMImgComics = [],   // TODO DELETE
         imgCorrectUrl = /\.(jpg|png|gif|bmp)$/i,
-        imageCounter = 0,    // TODO DELETE
-
     // create inteface
         blackoutComics = $('<div class="blackoutComics"></div>'),
         bodyComics = $('<div class="bodyComics"></div>'),
@@ -62,12 +56,9 @@ function HugeSlides(link, options) {
         element = imagesComics[0],
         container = bodyComics[0],
         content = document.createDocumentFragment(),
-        cSize,
         win = $(window),
         scroll,
-        scroll2,
-        zoom = false;   // TODO DEL
-
+        scroll2;
 
     bodyComics
         .append(imagesComics)
@@ -75,7 +66,6 @@ function HugeSlides(link, options) {
         .append(exitComics)
         .append(prevComics)
         .append(nextComics);
-
 
     if (!browser.touch) {
         var zoomComics = $('<div class="zoomComics" data-zoom="in"><div class="zoomComics_in"></div></div>');
@@ -213,9 +203,7 @@ function HugeSlides(link, options) {
                 delta = now - lastTouch;
             if (delta < delay && 0 < delta) {
                 this.lastTouch = null;
-                console.log('double index', index)
                 setOrRemoveDragHandlers(index, true);
-
             } else {
                 this.lastTouch = now;
             }
@@ -240,8 +228,7 @@ function HugeSlides(link, options) {
 
     for (var i = 0, slideObj, comicsLinksLength = options.comicsPreviewLinks.length; i < comicsLinksLength; i++) {
         if (imgCorrectUrl.test(options.comicsPreviewLinks[i])) {
-            slideObj = new Slide();
-            Slide.prototype.slidesLength = i + 1;                                                               // общее количество слайдов
+            slideObj = new Slide();                                                             // общее количество слайдов
             slideObj.setDoubleTap();
             slideObj.setNewSize();                                                                          // подстройка размера canvas под размер окна
             slideObj.divSlide.appendChild(slideObj.canvas);                                                 // div."imagesComicsItem loadImg">canvas
@@ -251,13 +238,14 @@ function HugeSlides(link, options) {
         }
     }
 
+    Slide.prototype.slidesLength = slidesList.length;
     element.appendChild(content);                                           // вставляем контейнеры слайдов в DOM
     totalPagesInfoComics.text(Slide.prototype.slidesLength);                // прорисовка общего количества слайдов
     var position = 500, position2 = 500;
 
     function startDrag(e) {                     // перетаскивание картинки
-        if (e.touches.length>1) {
-          return false;
+        if (e.touches && e.touches.length > 1) {
+            return false;
         }
         var testEl = slidesList[index].canvas,
 
@@ -354,7 +342,7 @@ function HugeSlides(link, options) {
         }
 
         function moveDrag(e) {
-            if (e.touches.length>1) {
+            if (e.touches && e.touches.length > 1) {
                 if (browser.touch) {
                     testEl.removeEventListener('touchend', endDrag, false);
                     testEl.removeEventListener('touchmove', moveDrag, false);
