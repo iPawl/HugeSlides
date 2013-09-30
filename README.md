@@ -1,4 +1,4 @@
-Huge Slides beta 1
+Huge Slides 1.01 beta
 ==========
 
 With HugeSlides, quickly and easily view big pics and more.
